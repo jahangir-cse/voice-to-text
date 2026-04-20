@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Voice to Text — Bangla & English</title>
+<style>
+  :root {
+    --bg: #0b141a;
+    --panel: #111b21;
+    --bubble: #005c4b;
+    --bubble-alt: #202c33;
+    --text: #e9edef;
+    --muted: #8696a0;
+    --accent: #00a884;
+    --danger: #f15c6d;
+    --border: #2a3942;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+  }
+  header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    color: #fff;
+  }
+  header h1 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 600;
+  }
+  header .sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 85%;
+    align-self: flex-end;
+    background: var(--bubble);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    font-size: 15px;
+    line-height: 1.45;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .msg.live {
+    background: var(--bubble-alt);
+    border: 1px solid var(--accent);
+    animation: livePulse 1.4s infinite;
+  }
+  .msg.live .live-text { color: var(--text); opacity: 0.95; }
+  @keyframes livePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 168, 132, 0.35); }
+    50% { box-shadow: 0 0 0 4px rgba(0, 168, 132, 0.0); }
+  }
+  .msg .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .play-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .play-btn:hover { background: rgba(255,255,255,0.2); }
+  .play-btn svg { width: 16px; height: 16px; }
+  .wave {
+    flex: 1;
+    height: 32px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .wave canvas { width: 100%; height: 100%; display: block; }
+  .meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .transcript-toggle {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .transcript {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 14px;
+    line-height: 1.4;
+    display: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .transcript.open { display: block; }
+  .transcript .lang {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .status-pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    margin-left: 6px;
+  }
+  .status-pill.err { background: var(--danger); }
+
+  .composer {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    position: sticky;
+    bottom: 0;
+  }
+  .lang-select {
+    background: var(--bubble-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    outline: none;
+  }
+  .hint {
+    flex: 1;
+    color: var(--muted);
+    font-size: 13px;
+    user-select: none;
+  }
+  .record-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.1s ease, background 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 168, 132, 0.35);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .record-btn:active { transform: scale(0.95); }
+  .record-btn.recording {
+    background: var(--danger);
+    animation: pulse 1.2s infinite;
+  }
+  .record-btn svg { width: 22px; height: 22px; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(241, 92, 109, 0.45); }
+    50% { box-shadow: 0 4px 24px rgba(241, 92, 109, 0.85); }
+  }
+
+  .rec-overlay {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bubble-alt);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 24px;
+    font-size: 14px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    z-index: 10;
+  }
+  .rec-overlay.on { display: flex; }
+  .rec-overlay .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger);
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .rec-overlay .cancel-hint { color: var(--muted); font-size: 12px; }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+  .banner {
+    margin: 12px 16px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(241, 92, 109, 0.15);
+    color: var(--danger);
+    font-size: 13px;
+    border: 1px solid rgba(241, 92, 109, 0.4);
+    display: none;
+  }
+  .banner.on { display: block; }
+
+  @media (max-width: 380px) {
+    header { padding: 12px 14px; }
+    .chat { padding: 12px; }
+    .composer { padding: 10px 12px; gap: 8px; }
+    .record-btn { width: 52px; height: 52px; }
+    .hint { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="avatar">VT</div>
+    <div>
+      <h1>Voice to Text</h1>
+      <div class="sub">Bangla &amp; English transcription</div>
+    </div>
+  </header>
+
+  <div id="banner" class="banner"></div>
+
+  <main id="chat" class="chat">
+    <div id="empty" class="empty">
+      মাইক বাটন চেপে ধরে বাংলায় কথা বলুন।<br />
+      ছেড়ে দিলে টেক্সট আকারে দেখাবে।<br />
+      বাতিল করতে উপরের দিকে স্লাইড করুন।
+    </div>
+  </main>
+
+  <div id="recOverlay" class="rec-overlay">
+    <span class="dot"></span>
+    <span id="recTimer">0:00</span>
+    <span class="cancel-hint">&nbsp;· slide up to cancel</span>
+  </div>
+
+  <div class="composer">
+    <div class="hint">মাইক চেপে ধরে বাংলায় বলুন · max 120s</div>
+    <button id="recBtn" class="record-btn" title="Hold to record" aria-label="Hold to record">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z"/>
+        <path d="M19 11a1 1 0 10-2 0 5 5 0 01-10 0 1 1 0 10-2 0 7 7 0 006 6.92V21h-2a1 1 0 100 2h6a1 1 0 100-2h-2v-3.08A7 7 0 0019 11z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const MAX_DURATION_MS = 120_000;
+  const CANCEL_SWIPE_PX = 80;
+  const LANG = "bn-BD";
+
+  const chatEl = document.getElementById("chat");
+  const emptyEl = document.getElementById("empty");
+  const recBtn = document.getElementById("recBtn");
+  const recOverlay = document.getElementById("recOverlay");
+  const recTimer = document.getElementById("recTimer");
+  const bannerEl = document.getElementById("banner");
+
+  const state = {
+    recognition: null,
+    finalText: "",
+    interimText: "",
+    startedAt: 0,
+    timerId: 0,
+    maxId: 0,
+    cancelled: false,
+    pressY: 0,
+    isRecording: false,
+    pressActive: false,
+    liveBubble: null,
+    liveTextEl: null,
+  };
+
+  function showBanner(msg) {
+    bannerEl.textContent = msg;
+    bannerEl.classList.add("on");
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => bannerEl.classList.remove("on"), 4000);
+  }
+
+  function fmtTime(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${m}:${String(r).padStart(2, "0")}`;
+  }
+
+  function startRecording() {
+    if (state.isRecording) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      showBanner("Web Speech API not supported. Use Chrome or Edge.");
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = LANG;
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    state.finalText = "";
+    state.interimText = "";
+    state.cancelled = false;
+    state.startedAt = performance.now();
+    state.isRecording = true;
+    state.recognition = rec;
+
+    createLiveBubble();
+
+    rec.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const transcript = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          state.finalText += transcript + " ";
+        } else {
+          interim += transcript;
+        }
+      }
+      state.interimText = interim;
+      updateLiveBubble();
+    };
+
+    rec.onerror = (e) => {
+      console.warn("[SR] error", e && e.error, e);
+      if (e && e.error === "not-allowed") {
+        showBanner("Microphone permission denied.");
+        finalizeBubble(true);
+        cleanupRecording();
+      } else if (e && e.error === "no-speech") {
+        // ignore — onend will handle
+      } else if (e && e.error) {
+        showBanner("Recognition error: " + e.error);
+      }
+    };
+
+    rec.onend = () => {
+      if (!state.isRecording) return;
+      // Auto-restart if user is still holding (Chrome stops after silence)
+      if (state.pressActive) {
+        try { rec.start(); } catch (_) {}
+        return;
+      }
+      finalizeBubble(state.cancelled);
+      cleanupRecording();
+    };
+
+    try {
+      rec.start();
+    } catch (err) {
+      showBanner("Could not start: " + (err && err.message ? err.message : ""));
+      cleanupRecording();
+      return;
+    }
+
+    recBtn.classList.add("recording");
+    recOverlay.classList.add("on");
+    recTimer.textContent = "0:00";
+
+    state.timerId = setInterval(() => {
+      const elapsed = performance.now() - state.startedAt;
+      recTimer.textContent = fmtTime(elapsed);
+    }, 200);
+
+    state.maxId = setTimeout(() => stopRecording(false), MAX_DURATION_MS);
+  }
+
+  function stopRecording(cancel) {
+    if (!state.isRecording) return;
+    state.cancelled = !!cancel;
+    state.pressActive = false;
+    clearInterval(state.timerId);
+    clearTimeout(state.maxId);
+    recBtn.classList.remove("recording");
+    recOverlay.classList.remove("on");
+    try { state.recognition && state.recognition.stop(); } catch (_) {}
+  }
+
+  function cleanupRecording() {
+    state.isRecording = false;
+    state.recognition = null;
+    state.liveBubble = null;
+    state.liveTextEl = null;
+    state.finalText = "";
+    state.interimText = "";
+  }
+
+  function createLiveBubble() {
+    emptyEl.style.display = "none";
+    const msg = document.createElement("div");
+    msg.className = "msg live";
+    const txt = document.createElement("div");
+    txt.className = "live-text";
+    txt.textContent = "শুনছি…";
+    msg.appendChild(txt);
+    chatEl.appendChild(msg);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    state.liveBubble = msg;
+    state.liveTextEl = txt;
+  }
+
+  function updateLiveBubble() {
+    if (!state.liveTextEl) return;
+    const combined = (state.finalText + state.interimText).trim();
+    state.liveTextEl.textContent = combined || "শুনছি…";
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function finalizeBubble(cancelled) {
+    if (!state.liveBubble) return;
+    const text = state.finalText.trim();
+    if (cancelled || !text) {
+      state.liveBubble.remove();
+      if (!cancelled && !text) showBanner("কিছু শোনা যায়নি। আবার চেষ্টা করুন।");
+      if (!chatEl.querySelector(".msg")) emptyEl.style.display = "";
+      return;
+    }
+    state.liveBubble.classList.remove("live");
+    state.liveTextEl.classList.remove("live-text");
+    state.liveTextEl.textContent = text;
+  }
+
+  function pressStart(e) {
+    if (e.cancelable) e.preventDefault();
+    state.pressY = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
+    state.pressActive = true;
+    startRecording();
+  }
+  function pressMove(e) {
+    if (!state.isRecording) return;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
+    if (state.pressY - y > CANCEL_SWIPE_PX) {
+      stopRecording(true);
+    }
+  }
+  function pressEnd() {
+    state.pressActive = false;
+    if (state.isRecording) stopRecording(false);
+  }
+
+  recBtn.addEventListener("mousedown", pressStart);
+  recBtn.addEventListener("touchstart", pressStart, { passive: false });
+  window.addEventListener("mousemove", pressMove);
+  window.addEventListener("touchmove", pressMove, { passive: true });
+  window.addEventListener("mouseup", pressEnd);
+  window.addEventListener("touchend", pressEnd);
+  window.addEventListener("touchcancel", pressEnd);
+
+  window.addEventListener("beforeunload", () => {
+    stopRecording(true);
+  });
+})();
+</script>
+</body>
+</html>
