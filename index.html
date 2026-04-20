@@ -200,14 +200,16 @@
     transition: transform 0.1s ease, background 0.2s ease;
     box-shadow: 0 4px 12px rgba(0, 168, 132, 0.35);
     -webkit-tap-highlight-color: transparent;
-    touch-action: none;
   }
   .record-btn:active { transform: scale(0.95); }
   .record-btn.recording {
     background: var(--danger);
     animation: pulse 1.2s infinite;
   }
-  .record-btn svg { width: 22px; height: 22px; }
+  .record-btn svg { width: 22px; height: 22px; grid-area: 1 / 1; }
+  .record-btn .icon-stop { display: none; }
+  .record-btn.recording .icon-mic { display: none; }
+  .record-btn.recording .icon-stop { display: block; }
   @keyframes pulse {
     0%, 100% { box-shadow: 0 4px 12px rgba(241, 92, 109, 0.45); }
     50% { box-shadow: 0 4px 24px rgba(241, 92, 109, 0.85); }
@@ -238,7 +240,18 @@
     animation: blink 1s infinite;
   }
   @keyframes blink { 50% { opacity: 0.3; } }
-  .rec-overlay .cancel-hint { color: var(--muted); font-size: 12px; }
+  .rec-overlay .cancel-btn {
+    margin-left: 8px;
+    background: rgba(241, 92, 109, 0.18);
+    color: var(--danger);
+    border: 1px solid rgba(241, 92, 109, 0.5);
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rec-overlay .cancel-btn:hover { background: rgba(241, 92, 109, 0.28); }
 
   .empty {
     text-align: center;
@@ -281,24 +294,27 @@
 
   <main id="chat" class="chat">
     <div id="empty" class="empty">
-      মাইক বাটন চেপে ধরে বাংলায় কথা বলুন।<br />
-      ছেড়ে দিলে টেক্সট আকারে দেখাবে।<br />
-      বাতিল করতে উপরের দিকে স্লাইড করুন।
+      মাইক বাটনে চাপ দিয়ে বাংলায় কথা বলুন।<br />
+      আবার চাপ দিলে থেমে যাবে ও টেক্সট আকারে দেখাবে।<br />
+      বাতিল করতে রেকর্ডিং চলাকালীন "বাতিল" বাটন চাপুন।
     </div>
   </main>
 
   <div id="recOverlay" class="rec-overlay">
     <span class="dot"></span>
     <span id="recTimer">0:00</span>
-    <span class="cancel-hint">&nbsp;· slide up to cancel</span>
+    <button id="cancelBtn" class="cancel-btn" type="button">বাতিল</button>
   </div>
 
   <div class="composer">
-    <div class="hint">মাইক চেপে ধরে বাংলায় বলুন · max 120s</div>
-    <button id="recBtn" class="record-btn" title="Hold to record" aria-label="Hold to record">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <div class="hint">মাইক চেপে শুরু/বন্ধ করুন · max 10 min</div>
+    <button id="recBtn" class="record-btn" type="button" title="Tap to start/stop" aria-label="Start recording">
+      <svg class="icon-mic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z"/>
         <path d="M19 11a1 1 0 10-2 0 5 5 0 01-10 0 1 1 0 10-2 0 7 7 0 006 6.92V21h-2a1 1 0 100 2h6a1 1 0 100-2h-2v-3.08A7 7 0 0019 11z"/>
+      </svg>
+      <svg class="icon-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="2"/>
       </svg>
     </button>
   </div>
@@ -308,13 +324,13 @@
 (() => {
   "use strict";
 
-  const MAX_DURATION_MS = 120_000;
-  const CANCEL_SWIPE_PX = 80;
+  const MAX_DURATION_MS = 600_000;
   const LANG = "bn-BD";
 
   const chatEl = document.getElementById("chat");
   const emptyEl = document.getElementById("empty");
   const recBtn = document.getElementById("recBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
   const recOverlay = document.getElementById("recOverlay");
   const recTimer = document.getElementById("recTimer");
   const bannerEl = document.getElementById("banner");
@@ -323,15 +339,17 @@
     recognition: null,
     finalText: "",
     interimText: "",
+    committedText: "",
     startedAt: 0,
     timerId: 0,
     maxId: 0,
     cancelled: false,
-    pressY: 0,
     isRecording: false,
-    pressActive: false,
+    shouldRestart: false,
     liveBubble: null,
     liveTextEl: null,
+    restartCount: 0,
+    lastRestartAt: 0,
   };
 
   function showBanner(msg) {
@@ -348,66 +366,120 @@
     return `${m}:${String(r).padStart(2, "0")}`;
   }
 
-  function startRecording() {
-    if (state.isRecording) return;
+  function buildRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      showBanner("Web Speech API not supported. Use Chrome or Edge.");
-      return;
-    }
-
+    if (!SR) return null;
     const rec = new SR();
     rec.lang = LANG;
-    rec.continuous = true;
+    // continuous=false is more reliable on mobile Chrome: each utterance ends
+    // cleanly and we immediately restart for the next one. continuous=true is
+    // poorly supported on mobile and tends to silently stop after ~30s.
+    rec.continuous = false;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    state.finalText = "";
-    state.interimText = "";
-    state.cancelled = false;
-    state.startedAt = performance.now();
-    state.isRecording = true;
-    state.recognition = rec;
-
-    createLiveBubble();
-
     rec.onresult = (e) => {
+      let sessionFinal = "";
       let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      for (let i = 0; i < e.results.length; i++) {
         const transcript = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          state.finalText += transcript + " ";
+          sessionFinal += transcript + " ";
         } else {
           interim += transcript;
         }
       }
+      state.finalText = state.committedText + sessionFinal;
       state.interimText = interim;
       updateLiveBubble();
     };
 
     rec.onerror = (e) => {
-      console.warn("[SR] error", e && e.error, e);
-      if (e && e.error === "not-allowed") {
+      const code = e && e.error;
+      console.warn("[SR] error", code, e);
+      if (code === "not-allowed" || code === "service-not-allowed") {
         showBanner("Microphone permission denied.");
+        state.shouldRestart = false;
         finalizeBubble(true);
         cleanupRecording();
-      } else if (e && e.error === "no-speech") {
-        // ignore — onend will handle
-      } else if (e && e.error) {
-        showBanner("Recognition error: " + e.error);
+      } else if (code === "no-speech" || code === "aborted" || code === "network" || code === "audio-capture") {
+        // let onend handle restart
+      } else if (code) {
+        showBanner("Recognition error: " + code);
       }
     };
 
     rec.onend = () => {
       if (!state.isRecording) return;
-      // Auto-restart if user is still holding (Chrome stops after silence)
-      if (state.pressActive) {
-        try { rec.start(); } catch (_) {}
+      if (!state.shouldRestart) {
+        finalizeBubble(state.cancelled);
+        cleanupRecording();
         return;
       }
-      finalizeBubble(state.cancelled);
-      cleanupRecording();
+      // Commit whatever final text this session produced before restarting
+      state.committedText = state.finalText;
+      state.interimText = "";
+
+      // Loop guard: if we're restarting too fast (browser is rejecting starts),
+      // back off to avoid a tight failure loop.
+      const now = performance.now();
+      if (now - state.lastRestartAt < 300) {
+        state.restartCount++;
+      } else {
+        state.restartCount = 0;
+      }
+      state.lastRestartAt = now;
+      if (state.restartCount > 8) {
+        showBanner("রেকর্ডিং বন্ধ হয়ে গেছে। আবার মাইক চাপুন।");
+        state.shouldRestart = false;
+        finalizeBubble(false);
+        cleanupRecording();
+        return;
+      }
+
+      const next = buildRecognition();
+      if (!next) { cleanupRecording(); return; }
+      state.recognition = next;
+      try {
+        next.start();
+      } catch (err) {
+        console.warn("[SR] restart failed", err);
+        setTimeout(() => {
+          if (!state.isRecording || !state.shouldRestart) return;
+          try { next.start(); } catch (err2) {
+            console.warn("[SR] restart retry failed", err2);
+            showBanner("রেকর্ডিং চালু রাখা গেল না। আবার চেষ্টা করুন।");
+            state.shouldRestart = false;
+            finalizeBubble(false);
+            cleanupRecording();
+          }
+        }, 200);
+      }
     };
+
+    return rec;
+  }
+
+  function startRecording() {
+    if (state.isRecording) return;
+    const rec = buildRecognition();
+    if (!rec) {
+      showBanner("Web Speech API not supported. Use Chrome or Edge.");
+      return;
+    }
+
+    state.finalText = "";
+    state.interimText = "";
+    state.committedText = "";
+    state.cancelled = false;
+    state.startedAt = performance.now();
+    state.isRecording = true;
+    state.shouldRestart = true;
+    state.restartCount = 0;
+    state.lastRestartAt = 0;
+    state.recognition = rec;
+
+    createLiveBubble();
 
     try {
       rec.start();
@@ -418,6 +490,7 @@
     }
 
     recBtn.classList.add("recording");
+    recBtn.setAttribute("aria-label", "Stop recording");
     recOverlay.classList.add("on");
     recTimer.textContent = "0:00";
 
@@ -432,21 +505,26 @@
   function stopRecording(cancel) {
     if (!state.isRecording) return;
     state.cancelled = !!cancel;
-    state.pressActive = false;
+    state.shouldRestart = false;
     clearInterval(state.timerId);
     clearTimeout(state.maxId);
     recBtn.classList.remove("recording");
+    recBtn.setAttribute("aria-label", "Start recording");
     recOverlay.classList.remove("on");
     try { state.recognition && state.recognition.stop(); } catch (_) {}
   }
 
   function cleanupRecording() {
     state.isRecording = false;
+    state.shouldRestart = false;
     state.recognition = null;
     state.liveBubble = null;
     state.liveTextEl = null;
     state.finalText = "";
     state.interimText = "";
+    state.committedText = "";
+    state.restartCount = 0;
+    state.lastRestartAt = 0;
   }
 
   function createLiveBubble() {
@@ -484,31 +562,19 @@
     state.liveTextEl.textContent = text;
   }
 
-  function pressStart(e) {
-    if (e.cancelable) e.preventDefault();
-    state.pressY = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
-    state.pressActive = true;
-    startRecording();
-  }
-  function pressMove(e) {
-    if (!state.isRecording) return;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
-    if (state.pressY - y > CANCEL_SWIPE_PX) {
-      stopRecording(true);
+  function toggleRecording() {
+    if (state.isRecording) {
+      stopRecording(false);
+    } else {
+      startRecording();
     }
   }
-  function pressEnd() {
-    state.pressActive = false;
-    if (state.isRecording) stopRecording(false);
-  }
 
-  recBtn.addEventListener("mousedown", pressStart);
-  recBtn.addEventListener("touchstart", pressStart, { passive: false });
-  window.addEventListener("mousemove", pressMove);
-  window.addEventListener("touchmove", pressMove, { passive: true });
-  window.addEventListener("mouseup", pressEnd);
-  window.addEventListener("touchend", pressEnd);
-  window.addEventListener("touchcancel", pressEnd);
+  recBtn.addEventListener("click", toggleRecording);
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    stopRecording(true);
+  });
 
   window.addEventListener("beforeunload", () => {
     stopRecording(true);
