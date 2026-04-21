@@ -60,6 +60,61 @@
     font-size: 12px;
     color: var(--muted);
   }
+  header .title-wrap { flex: 1; min-width: 0; }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .icon-btn:hover { background: var(--bubble-alt); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .settings-panel {
+    background: var(--bubble-alt);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, padding 0.2s ease;
+  }
+  .settings-panel.open {
+    padding: 12px 16px;
+    max-height: 260px;
+  }
+  .settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    gap: 12px;
+  }
+  .settings-row input[type="number"] {
+    width: 90px;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    outline: none;
+  }
+  .settings-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+  }
+  .settings-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
   .chat {
     flex: 1;
     padding: 16px;
@@ -284,11 +339,33 @@
 <div class="app">
   <header>
     <div class="avatar">VT</div>
-    <div>
+    <div class="title-wrap">
       <h1>Voice to Text</h1>
       <div class="sub">Bangla &amp; English transcription</div>
     </div>
+    <button id="settingsBtn" class="icon-btn" type="button" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path>
+      </svg>
+    </button>
   </header>
+
+  <div id="settingsPanel" class="settings-panel">
+    <label class="settings-row">
+      <span>Auto-punctuation</span>
+      <input type="checkbox" id="setAutoPunct" />
+    </label>
+    <label class="settings-row">
+      <span>কমা'র জন্য pause (ms)</span>
+      <input type="number" id="setPauseComma" min="500" max="5000" step="100" />
+    </label>
+    <label class="settings-row">
+      <span>নতুন লাইনের জন্য pause (ms)</span>
+      <input type="number" id="setPauseNewline" min="1000" max="10000" step="100" />
+    </label>
+    <div class="settings-note">পরিবর্তন auto-save হয়</div>
+  </div>
 
   <div id="banner" class="banner"></div>
 
@@ -327,6 +404,32 @@
   const MAX_DURATION_MS = 600_000;
   const LANG = "bn-BD";
 
+  const DEFAULT_SETTINGS = {
+    autoPunctuation: true,
+    pauseCommaMs: 1500,
+    pauseNewlineMs: 3000,
+  };
+  function loadSettings() {
+    try {
+      const raw = JSON.parse(localStorage.getItem("vtt_settings"));
+      return { ...DEFAULT_SETTINGS, ...(raw || {}) };
+    } catch {
+      return { ...DEFAULT_SETTINGS };
+    }
+  }
+  function saveSettings() {
+    try { localStorage.setItem("vtt_settings", JSON.stringify(settings)); } catch {}
+  }
+  const settings = loadSettings();
+
+  function computeSeparator(gapMs) {
+    if (state.committedText === "") return "";
+    if (!settings.autoPunctuation) return " ";
+    if (gapMs >= settings.pauseNewlineMs) return "।\n";
+    if (gapMs >= settings.pauseCommaMs) return ", ";
+    return " ";
+  }
+
   const chatEl = document.getElementById("chat");
   const emptyEl = document.getElementById("empty");
   const recBtn = document.getElementById("recBtn");
@@ -334,12 +437,19 @@
   const recOverlay = document.getElementById("recOverlay");
   const recTimer = document.getElementById("recTimer");
   const bannerEl = document.getElementById("banner");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsPanel = document.getElementById("settingsPanel");
+  const setAutoPunct = document.getElementById("setAutoPunct");
+  const setPauseComma = document.getElementById("setPauseComma");
+  const setPauseNewline = document.getElementById("setPauseNewline");
 
   const state = {
     recognition: null,
     finalText: "",
     interimText: "",
     committedText: "",
+    sessionFinalText: "",
+    lastUtteranceEndAt: 0,
     startedAt: 0,
     timerId: 0,
     maxId: 0,
@@ -384,12 +494,14 @@
       for (let i = 0; i < e.results.length; i++) {
         const transcript = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          sessionFinal += transcript + " ";
+          sessionFinal += transcript;
         } else {
           interim += transcript;
         }
       }
-      state.finalText = state.committedText + sessionFinal;
+      state.sessionFinalText = sessionFinal.trim();
+      const previewSep = state.committedText && state.sessionFinalText ? " " : "";
+      state.finalText = state.committedText + previewSep + state.sessionFinalText;
       state.interimText = interim;
       updateLiveBubble();
     };
@@ -411,18 +523,26 @@
 
     rec.onend = () => {
       if (!state.isRecording) return;
+
+      const now = performance.now();
+      if (state.sessionFinalText) {
+        const gap = state.lastUtteranceEndAt ? now - state.lastUtteranceEndAt : 0;
+        const sep = computeSeparator(gap);
+        state.committedText = state.committedText.replace(/\s+$/, "") + sep + state.sessionFinalText;
+        state.lastUtteranceEndAt = now;
+      }
+      state.sessionFinalText = "";
+      state.finalText = state.committedText;
+      state.interimText = "";
+
       if (!state.shouldRestart) {
         finalizeBubble(state.cancelled);
         cleanupRecording();
         return;
       }
-      // Commit whatever final text this session produced before restarting
-      state.committedText = state.finalText;
-      state.interimText = "";
 
       // Loop guard: if we're restarting too fast (browser is rejecting starts),
       // back off to avoid a tight failure loop.
-      const now = performance.now();
       if (now - state.lastRestartAt < 300) {
         state.restartCount++;
       } else {
@@ -471,6 +591,8 @@
     state.finalText = "";
     state.interimText = "";
     state.committedText = "";
+    state.sessionFinalText = "";
+    state.lastUtteranceEndAt = 0;
     state.cancelled = false;
     state.startedAt = performance.now();
     state.isRecording = true;
@@ -523,6 +645,8 @@
     state.finalText = "";
     state.interimText = "";
     state.committedText = "";
+    state.sessionFinalText = "";
+    state.lastUtteranceEndAt = 0;
     state.restartCount = 0;
     state.lastRestartAt = 0;
   }
@@ -574,6 +698,30 @@
   cancelBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     stopRecording(true);
+  });
+
+  setAutoPunct.checked = settings.autoPunctuation;
+  setPauseComma.value = settings.pauseCommaMs;
+  setPauseNewline.value = settings.pauseNewlineMs;
+
+  settingsBtn.addEventListener("click", () => {
+    settingsPanel.classList.toggle("open");
+  });
+  setAutoPunct.addEventListener("change", (e) => {
+    settings.autoPunctuation = e.target.checked;
+    saveSettings();
+  });
+  setPauseComma.addEventListener("change", (e) => {
+    const v = Number(e.target.value);
+    settings.pauseCommaMs = Number.isFinite(v) && v >= 500 ? v : DEFAULT_SETTINGS.pauseCommaMs;
+    e.target.value = settings.pauseCommaMs;
+    saveSettings();
+  });
+  setPauseNewline.addEventListener("change", (e) => {
+    const v = Number(e.target.value);
+    settings.pauseNewlineMs = Number.isFinite(v) && v >= 1000 ? v : DEFAULT_SETTINGS.pauseNewlineMs;
+    e.target.value = settings.pauseNewlineMs;
+    saveSettings();
   });
 
   window.addEventListener("beforeunload", () => {
