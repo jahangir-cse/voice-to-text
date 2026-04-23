@@ -364,6 +364,10 @@
       <span>নতুন লাইনের জন্য pause (ms)</span>
       <input type="number" id="setPauseNewline" min="1000" max="10000" step="100" />
     </label>
+    <label class="settings-row">
+      <span>Timestamp দেখাবে</span>
+      <input type="checkbox" id="setShowTimestamps" />
+    </label>
     <div class="settings-note">পরিবর্তন auto-save হয়</div>
   </div>
 
@@ -408,6 +412,7 @@
     autoPunctuation: true,
     pauseCommaMs: 1500,
     pauseNewlineMs: 3000,
+    showTimestamps: true,
   };
   function loadSettings() {
     try {
@@ -442,6 +447,7 @@
   const setAutoPunct = document.getElementById("setAutoPunct");
   const setPauseComma = document.getElementById("setPauseComma");
   const setPauseNewline = document.getElementById("setPauseNewline");
+  const setShowTimestamps = document.getElementById("setShowTimestamps");
 
   const state = {
     recognition: null,
@@ -474,6 +480,15 @@
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${m}:${String(r).padStart(2, "0")}`;
+  }
+
+  function fmtClock(d) {
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const s = d.getSeconds();
+    const period = h >= 12 ? "PM" : "AM";
+    const h12 = ((h + 11) % 12) + 1;
+    return `${h12}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} ${period}`;
   }
 
   function buildRecognition() {
@@ -528,7 +543,8 @@
       if (state.sessionFinalText) {
         const gap = state.lastUtteranceEndAt ? now - state.lastUtteranceEndAt : 0;
         const sep = computeSeparator(gap);
-        state.committedText = state.committedText.replace(/\s+$/, "") + sep + state.sessionFinalText;
+        const stamp = settings.showTimestamps ? ` (${fmtClock(new Date())})` : "";
+        state.committedText = state.committedText.replace(/\s+$/, "") + sep + state.sessionFinalText + stamp;
         state.lastUtteranceEndAt = now;
       }
       state.sessionFinalText = "";
@@ -703,6 +719,7 @@
   setAutoPunct.checked = settings.autoPunctuation;
   setPauseComma.value = settings.pauseCommaMs;
   setPauseNewline.value = settings.pauseNewlineMs;
+  setShowTimestamps.checked = settings.showTimestamps;
 
   settingsBtn.addEventListener("click", () => {
     settingsPanel.classList.toggle("open");
@@ -721,6 +738,10 @@
     const v = Number(e.target.value);
     settings.pauseNewlineMs = Number.isFinite(v) && v >= 1000 ? v : DEFAULT_SETTINGS.pauseNewlineMs;
     e.target.value = settings.pauseNewlineMs;
+    saveSettings();
+  });
+  setShowTimestamps.addEventListener("change", (e) => {
+    settings.showTimestamps = e.target.checked;
     saveSettings();
   });
 
