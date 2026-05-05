@@ -353,6 +353,74 @@
             }
         }
 
+        .faq-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin: 14px 0;
+            overflow: hidden;
+        }
+
+        .faq-q {
+            background: #f9fafb;
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--primary);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .faq-q::before {
+            content: 'প্র';
+            background: var(--primary);
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .faq-a {
+            padding: 16px 20px 16px 58px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .faq-a::before {
+            content: 'উ';
+            background: var(--accent);
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            position: absolute;
+            left: 20px;
+            top: 16px;
+        }
+
+        .faq-a ul {
+            margin: 8px 0 0 16px;
+        }
+
+        .faq-a li {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
         @media print {
             .sidebar { display: none; }
             .layout { grid-template-columns: 1fr; }
@@ -391,6 +459,10 @@
                 <li class="menu-item" data-section="s6">
                     <span class="num">৫</span>
                     <span>Business অ্যাপ — সুবিধা ও অসুবিধা</span>
+                </li>
+                <li class="menu-item" data-section="s7">
+                    <span class="num">৬</span>
+                    <span>FAQ — সাধারণ প্রশ্নোত্তর</span>
                 </li>
             </ul>
         </aside>
@@ -873,6 +945,154 @@
                         <li>WhatsApp Business Help Center: <a href="https://faq.whatsapp.com/business" target="_blank">faq.whatsapp.com/business</a></li>
                         <li>Linked Devices info: <a href="https://faq.whatsapp.com/378279809275439" target="_blank">faq.whatsapp.com (Linked Devices)</a></li>
                         <li>Acceptable Use Policy: <a href="https://www.whatsapp.com/legal/business-policy" target="_blank">whatsapp.com/legal/business-policy</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 7: FAQ -->
+            <section class="section" id="s7">
+                <h2>৬. FAQ — সাধারণ প্রশ্নোত্তর</h2>
+                <p class="lead">প্রায়শই জিজ্ঞাসিত প্রশ্ন এবং সংক্ষিপ্ত উত্তর। মূল প্রশ্ন তিনটি বিস্তারিত, এরপর সম্পর্কিত অন্যান্য প্রশ্নের সংক্ষিপ্ত উত্তর।</p>
+
+                <h3>মূল প্রশ্নসমূহ</h3>
+
+                <div class="faq-item">
+                    <div class="faq-q">Android phone-এ SIM না থেকে অন্য button phone-এ SIM থাকলে OTP দিয়ে WhatsApp account তৈরি করা যাবে কি না? (Personal/Business দু'টো)</div>
+                    <div class="faq-a">
+                        <strong>হ্যাঁ, করা যাবে।</strong> দু'টো অ্যাপের জন্যই একই পদ্ধতি কাজ করে।
+                        <ul>
+                            <li>SIM আপনার button phone-এ থাকুক — Android-এ WhatsApp install করে সেই নম্বর দিন</li>
+                            <li>WhatsApp OTP <strong>SMS বা Voice Call</strong> পাঠাবে সেই নম্বরে</li>
+                            <li>SMS button phone-এ আসবে → ৬-ডিজিট OTP পড়ে Android-এ টাইপ করুন</li>
+                            <li>SMS না এলে "Call me" option-এ ক্লিক করুন → button phone-এ ringtone, voice OTP শুনে টাইপ করুন</li>
+                            <li>Verification successful হলে SIM Android-এ থাকার দরকার নেই — WhatsApp চলবে</li>
+                            <li>Personal এবং Business অ্যাপ দু'টোতেই এই process একই — শুধু আলাদা অ্যাপ install করতে হবে</li>
+                        </ul>
+                        <span class="badge badge-official">🟢 অফিসিয়াল</span> Reference: <a href="https://faq.whatsapp.com/906616613950339" target="_blank">WhatsApp Help Center — Verifying number</a>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Call/Message-এর জন্য Personal নাকি Business — কোনটা better?</div>
+                    <div class="faq-a">
+                        <strong>Use case-এর উপর নির্ভর করে।</strong>
+                        <ul>
+                            <li><strong>ব্যক্তিগত ব্যবহার / general user-এর কাছে call/message:</strong> Personal — সরল, কম scrutiny</li>
+                            <li><strong>Client/customer-এর কাছে professional communication:</strong> Business — profile, catalog, away messages, branded experience</li>
+                            <li><strong>Bulk marketing message:</strong> কোনোটাই officially safe নয় — ban risk দু'টোতেই, কিন্তু Business-এ আনুমানিক ৩০-৪০% বেশি (community reports) <span class="badge badge-estimate">🔴 আনুমানিক</span></li>
+                            <li><strong>One-on-one customer service:</strong> Business-এর Quick Replies + Labels অনেক বেশি efficient</li>
+                            <li><strong>Cold calling/outreach:</strong> দু'টোই risky, Business-এ recipient দ্রুত report করার tendency বেশি</li>
+                        </ul>
+                        <p style="margin-top: 10px;"><strong>Quick decision:</strong></p>
+                        <ul>
+                            <li>Brand/business presence গুরুত্বপূর্ণ → Business অ্যাপ</li>
+                            <li>শুধু basic communication → Personal</li>
+                            <li>High-volume marketing → Cloud API (paid, official)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Number Detection-এর জন্য Personal নাকি Business — কোনটা use করা better?</div>
+                    <div class="faq-a">
+                        <strong>Personal account recommended।</strong>
+                        <ul>
+                            <li>Community reports অনুযায়ী Personal-এ ban probability ১০-২০% কম <span class="badge badge-estimate">🔴 আনুমানিক</span></li>
+                            <li>Business profile = "এটা ব্যবসা bulk lookup করছে" এমন signal হতে পারে algorithm-এর কাছে</li>
+                            <li>Personal SIM সস্তা, ban হলে replace করা সহজ</li>
+                            <li>`whatsapp-web.js` library দু'টোতেই কাজ করে — functional difference নেই</li>
+                            <li>Business অ্যাপের catalog/profile features detection-এ কোনো কাজে আসে না</li>
+                        </ul>
+                        <p style="margin-top: 10px;"><strong>Best practice:</strong> Client-facing primary একাউন্ট = Business অ্যাপ, background detection-এর জন্য secondary disposable Personal numbers।</p>
+                    </div>
+                </div>
+
+                <h3>সম্পর্কিত অন্যান্য সাধারণ প্রশ্ন</h3>
+
+                <div class="faq-item">
+                    <div class="faq-q">একই নম্বর Personal এবং Business অ্যাপে একসাথে use করা যায়?</div>
+                    <div class="faq-a">না। ১ phone number = ১ একাউন্ট (Personal বা Business, একটাই)। Personal থেকে Business-এ migrate করা যায় (chat history সহ), কিন্তু একসাথে দু'টো নয়।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Personal থেকে Business অ্যাপে convert করা যায়?</div>
+                    <div class="faq-a">হ্যাঁ। Business অ্যাপ install করুন → সেই নম্বর দিয়ে verify করুন → WhatsApp Personal-এর data (chats, contacts, media) auto-migrate করার option দিবে। Reverse-ও সম্ভব (Business → Personal)।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Verification-এর পর SIM phone থেকে খুলে ফেললে WhatsApp চলবে?</div>
+                    <div class="faq-a">হ্যাঁ। Verification শুধু একবার লাগে। তারপর SIM device-এ থাকার দরকার নেই — WhatsApp internet দিয়ে চলে। কিন্তু re-verify করতে হলে (নতুন device-এ install) আবার সেই নম্বরে OTP লাগবে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">এক phone-এ একাধিক WhatsApp একাউন্ট চালানো যায়?</div>
+                    <div class="faq-a">হ্যাঁ — সাম্প্রতিক feature। Android-এ WhatsApp settings-এ "Add account" option আছে — দু'টো নম্বর একসাথে চালানো যায়। iPhone-এ এই feature এখনো limited rollout-এ।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Number change করলে WhatsApp একাউন্ট হারাবো?</div>
+                    <div class="faq-a">না। Settings → Account → Change Number — পুরোনো নম্বর থেকে নতুন নম্বরে chats, groups, settings সব transfer হবে। নতুন নম্বরে OTP verification লাগবে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">একাউন্ট ban হলে কতদিনের জন্য?</div>
+                    <div class="faq-a">
+                        <ul>
+                            <li><strong>Temporary ban:</strong> ২৪ ঘণ্টা থেকে ৭ দিন (সাধারণত)</li>
+                            <li><strong>Permanent ban:</strong> চিরতরে — সেই নম্বর পুনরায় re-register করা যায় না বহু মাস</li>
+                            <li>Ban হলে অ্যাপ "You are banned from using WhatsApp" message দেখাবে</li>
+                            <li>Appeal করা যায় (settings থেকে ba support@whatsapp.com), কিন্তু success rate কম</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">VPN ব্যবহার করলে ban এড়ানো যাবে?</div>
+                    <div class="faq-a">না — সাধারণত উল্টো effect হয়। WhatsApp datacenter IP detect করে, VPN-এ access আরো suspicious লাগে। Residential ISP সবচেয়ে safe।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Foreign number (অন্য দেশের) দিয়ে Bangladesh-এ WhatsApp চালানো যাবে?</div>
+                    <div class="faq-a">হ্যাঁ — phone number-এর country সাথে location-এর কোনো সম্পর্ক নেই। তবে detection automation-এর জন্য Bangladesh local number ব্যবহার করাই better, কারণ Bangladesh contacts check করছেন — pattern more natural দেখাবে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">eSIM দিয়ে WhatsApp একাউন্ট তৈরি করা যাবে?</div>
+                    <div class="faq-a">হ্যাঁ — physical SIM আর eSIM-এর মধ্যে WhatsApp-এর জন্য কোনো পার্থক্য নেই। শুধু OTP receive করার জন্য active phone number হলেই হবে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Business অ্যাপের জন্য আলাদা SIM/নম্বর লাগবে?</div>
+                    <div class="faq-a">হ্যাঁ — যদি Personal একাউন্ট রাখতে চান। একই নম্বরে Personal থাকলে Business একাউন্ট তৈরি করতে গেলে Personal-টা migrate বা logout হবে। Personal + Business দু'টোই চাইলে দু'টো আলাদা নম্বর লাগবে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">Linked Devices-এ Mac/PC থেকে Android-এর WhatsApp ব্যবহার করা যায়?</div>
+                    <div class="faq-a">হ্যাঁ — WhatsApp Web (web.whatsapp.com) বা Desktop অ্যাপ install করে phone-এর Linked Devices থেকে QR scan করুন। সর্বোচ্চ ৪টি device একসাথে link করা যায়।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">whatsapp-web.js library-তে কোন types-এর একাউন্ট ব্যবহার করা যাবে?</div>
+                    <div class="faq-a">দু'টোই (Personal এবং Business অ্যাপ)। Library Linked Devices feature ব্যবহার করে — সেটা দু'টোতেই available। Code change লাগবে না।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">একই whatsapp-web.js code-এ একাধিক একাউন্ট parallel চালানো যায়?</div>
+                    <div class="faq-a">হ্যাঁ — `LocalAuth({ clientId: 'account_1' })` দিয়ে আলাদা session create করে multiple Client instance চালানো যায়। প্রতিটি একাউন্ট আলাদা session folder-এ data রাখে।</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">WhatsApp একাউন্ট তৈরির জন্য কি phone থাকতে হবে?</div>
+                    <div class="faq-a">হ্যাঁ — initial registration smartphone (Android/iPhone) অথবা OTP-receivable phone থাকতে হবে। Pure tablet/Mac থেকে নতুন একাউন্ট তৈরি করা যায় না, শুধু linked device হিসেবে চলে।</div>
+                </div>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>WhatsApp Verifying Number Help: <a href="https://faq.whatsapp.com/906616613950339" target="_blank">faq.whatsapp.com (Verifying)</a></li>
+                        <li>Personal to Business migration: <a href="https://faq.whatsapp.com/business" target="_blank">faq.whatsapp.com/business</a></li>
+                        <li>Multi-account feature: <a href="https://faq.whatsapp.com" target="_blank">faq.whatsapp.com</a> (search: "multiple accounts")</li>
+                        <li>Linked Devices: <a href="https://faq.whatsapp.com/378279809275439" target="_blank">faq.whatsapp.com (Linked Devices)</a></li>
                     </ol>
                 </div>
             </section>
