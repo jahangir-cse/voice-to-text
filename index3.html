@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Presentation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a2b4a;
+            --accent: #25D366;
+            --accent-soft: #e8f8ee;
+            --warning: #d9534f;
+            --warning-soft: #fdebea;
+            --inferred: #f0ad4e;
+            --inferred-soft: #fdf3e3;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --muted: #6b7785;
+            --border: #e1e7ef;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: var(--primary);
+            color: #fff;
+            padding: 32px 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .menu-item.active {
+            background: rgba(37,211,102,0.15);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+
+        .menu-item .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .menu-item.active .num {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .main {
+            padding: 48px 56px;
+            max-width: 1100px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .section .lead {
+            font-size: 15px;
+            color: var(--muted);
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 28px 0 14px;
+        }
+
+        .section h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 20px 0 10px;
+        }
+
+        .section p {
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+
+        .section ul, .section ol {
+            margin: 12px 0 16px 24px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin: 16px 0;
+        }
+
+        .card-warning {
+            background: var(--warning-soft);
+            border-color: var(--warning);
+        }
+
+        .card-success {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .badge-official {
+            background: var(--accent-soft);
+            color: #117a3d;
+            border: 1px solid var(--accent);
+        }
+
+        .badge-inferred {
+            background: var(--inferred-soft);
+            color: #8a5a08;
+            border: 1px solid var(--inferred);
+        }
+
+        .badge-estimate {
+            background: var(--warning-soft);
+            color: #a02622;
+            border: 1px solid var(--warning);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background: #fafbfc;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+            border-bottom: 1px dotted #1a73e8;
+        }
+
+        a:hover {
+            border-bottom-style: solid;
+        }
+
+        code {
+            background: #f1f3f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 13px;
+            color: #d63384;
+        }
+
+        .citations {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .citations h4 {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .citations ol {
+            margin-left: 20px;
+        }
+
+        .citations li {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+
+        .citations a {
+            color: #1a73e8;
+            font-size: 13px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin: 16px 0 24px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .key-fact {
+            background: linear-gradient(135deg, #1a2b4a, #2c4373);
+            color: #fff;
+            padding: 24px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .key-fact h4 {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .key-fact p {
+            font-size: 17px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+                height: auto;
+                padding: 16px 0;
+            }
+            .main {
+                padding: 24px 20px;
+            }
+            .section h2 {
+                font-size: 22px;
+            }
+        }
+
+        @media print {
+            .sidebar { display: none; }
+            .layout { grid-template-columns: 1fr; }
+            .section { display: block !important; page-break-after: always; }
+            .main { padding: 20px; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>WhatsApp Presentation</h1>
+            </div>
+            <ul class="menu">
+                <li class="menu-item active" data-section="s1">
+                    <span class="num">১</span>
+                    <span>পূর্বের তথ্য — ভুল ও সোর্স</span>
+                </li>
+                <li class="menu-item" data-section="s2">
+                    <span class="num">২</span>
+                    <span>দৈনিক কল লিমিট — আসল সত্য</span>
+                </li>
+                <li class="menu-item" data-section="s3">
+                    <span class="num">৩</span>
+                    <span>মেসেজ লিমিট সারাংশ</span>
+                </li>
+                <li class="menu-item" data-section="s4" style="display: none;">
+                    <span class="num">৪</span>
+                    <span>Business API লিমিটেশন</span>
+                </li>
+                <li class="menu-item" data-section="s5">
+                    <span class="num">৪</span>
+                    <span>নম্বর ডিটেকশন লিমিট</span>
+                </li>
+                <li class="menu-item" data-section="s6">
+                    <span class="num">৫</span>
+                    <span>Business অ্যাপ — সুবিধা ও অসুবিধা</span>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main">
+
+            <!-- SECTION 1 -->
+            <section class="section active" id="s1">
+                <h2>১. পূর্বের লিমিট তথ্য — কারণ, সোর্স ও ভুল</h2>
+                <p class="lead">আগের আলোচনায় কিছু নির্দিষ্ট সংখ্যা (কল লিমিট, লুকআপ লিমিট) আত্মবিশ্বাসের সাথে উপস্থাপন করা হয়েছিল যথাযথ সোর্স উল্লেখ ছাড়াই। সৎ ব্যাখ্যা — সেই সংখ্যাগুলোর প্রকৃত উৎস কী ছিল, কোথায় ভুল হয়েছিল, এবং সঠিক ফ্রেমিং কেমন হওয়া উচিত ছিল।</p>
+
+                <div class="legend">
+                    <div class="legend-item"><span class="badge badge-official">🟢 অফিসিয়াল</span> Meta-এর নিজস্ব ডকুমেন্টেশন থেকে</div>
+                    <div class="legend-item"><span class="badge badge-inferred">🟡 অনুমিত</span> ডকুমেন্টেড তথ্য থেকে যৌক্তিক উপসংহার</div>
+                    <div class="legend-item"><span class="badge badge-estimate">🔴 আনুমানিক</span> কমিউনিটি/বেক্তিগত মতামত, যাচাইহীন</div>
+                </div>
+
+                <h3>আগে যেসব নির্দিষ্ট দাবি করা হয়েছিল</h3>
+                <table>
+                    <thead>
+                        <tr><th>দাবি</th><th>সোর্সের মান</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Personal একাউন্ট: প্রতিদিন ~২০০ লুকআপ নিরাপদ, ~১০০০ মাঝারি ঝুঁকি</td><td><span class="badge badge-estimate">🔴 আনুমানিক</span></td></tr>
+                        <tr><td>Business একাউন্ট: প্রতিদিন ~৩-৫টি unanswered কলেই ফ্ল্যাগ হয়</td><td><span class="badge badge-estimate">🔴 আনুমানিক</span></td></tr>
+                        <tr><td>৫০+ cold call/দিন = ২৪-৪৮ ঘণ্টায় ব্যান</td><td><span class="badge badge-estimate">🔴 আনুমানিক</span></td></tr>
+                        <tr><td>Business অ্যাপ Personal-এর তুলনায় কঠোর (~৩০-৪০%)</td><td><span class="badge badge-estimate">🔴 আনুমানিক</span></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>সোর্স ব্রেকডাউন — এই সংখ্যাগুলো আসলে কোথা থেকে এসেছিল</h3>
+                <div class="card card-warning">
+                    <p><strong>AI ট্রেনিং ডেটা থেকে synthesized।</strong> বিশেষভাবে যেসব সোর্স থেকে:</p>
+                    <ul>
+                        <li>Reddit / r/whatsapp কমিউনিটির ব্যান রিপোর্ট পোস্ট</li>
+                        <li>মার্কেটিং/অটোমেশন ব্লগের "WhatsApp টিপস" আর্টিকেল</li>
+                        <li>Stack Overflow / Quora ব্যক্তিগত ব্যবহারকারীর অভিজ্ঞতা</li>
+                        <li>whatsapp-web.js রিপোজিটরির GitHub issues</li>
+                        <li>বিভিন্ন তৃতীয় পক্ষের অটোমেশন টুলের ডকুমেন্টেশন</li>
+                    </ul>
+                    <p><strong>Meta-এর নিজস্ব ডকুমেন্টেশন থেকে নয়।</strong> Meta অফিসিয়ালি Personal/Business অ্যাপের জন্য কোনো নির্দিষ্ট দৈনিক লিমিট প্রকাশ করে না।</p>
+                </div>
+
+                <h3>ভুলটা কী ছিল</h3>
+                <ol>
+                    <li><strong>নির্দিষ্ট সংখ্যা ফ্যাক্ট হিসেবে উপস্থাপন</strong> — "৫/দিন", "১০০০/দিন" এমন precise numbers "approximately" বা "estimate" qualification ছাড়াই</li>
+                    <li><strong>আগেই সোর্স লেবেলিং করা হয়নি</strong> — শুরুতেই "এটা কমিউনিটি এস্টিমেট" বলা উচিত ছিল</li>
+                    <li><strong>Uncertainty disclose করা হয়নি</strong> — variance অনেক, কিন্তু uniform confidence-এ উপস্থাপিত হয়েছিল</li>
+                    <li><strong>Verification path দেওয়া হয়নি</strong> — ব্যবহারকারী কীভাবে নিজে যাচাই করবেন সেটা বলা হয়নি</li>
+                </ol>
+
+                <h3>সঠিক ফ্রেমিং (যেটা হওয়া উচিত ছিল)</h3>
+                <div class="card card-success">
+                    <p>"Meta অফিসিয়ালি Personal/Business অ্যাপের জন্য দৈনিক কল/লুকআপ লিমিট প্রকাশ করে <strong>না</strong> [<a href="https://faq.whatsapp.com" target="_blank">যাচাই: Help Center</a>]। Anti-abuse mechanism <strong>pattern-ভিত্তিক</strong>, threshold-ভিত্তিক <strong>না</strong>। কমিউনিটি সোর্স (Reddit, ব্লগ) কিছু volume-এ ব্যান হয়েছে বলে রিপোর্ট করেছে, কিন্তু সেগুলো individual user reports — statistical reliability নেই। প্ল্যানিং উদ্দেশ্যে indicative ranges ব্যবহার করা যায়, কিন্তু deterministic 'safe limit' বলা যায় না।"</p>
+                </div>
+
+                <h3>শিক্ষা</h3>
+                <p>নির্দিষ্ট সংখ্যাগত দাবির সাথে সবসময় source quality লেবেল করা উচিত। Section ২-৫ এ আমরা এই উন্নত ফ্রেমিং অনুসরণ করব — প্রতিটি দাবিতে badge থাকবে (🟢 অফিসিয়াল / 🟡 অনুমিত / 🔴 আনুমানিক)।</p>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>WhatsApp Help Center (দৈনিক লিমিট ডকুমেন্টেড নয়): <a href="https://faq.whatsapp.com" target="_blank">https://faq.whatsapp.com</a></li>
+                        <li>WhatsApp Terms of Service: <a href="https://www.whatsapp.com/legal/terms-of-service" target="_blank">https://www.whatsapp.com/legal/terms-of-service</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 2 -->
+            <section class="section" id="s2">
+                <h2>২. দৈনিক কল লিমিট — আসলে কী আছে?</h2>
+                <p class="lead">মূল প্রশ্ন: Personal/Business WhatsApp একাউন্ট থেকে দৈনিক কতগুলো কল করা যায়? সৎ উত্তর: Meta নিজে নির্দিষ্ট লিমিট প্রকাশ করে না, তবে pattern-ভিত্তিক anti-abuse system বিদ্যমান।</p>
+
+                <div class="key-fact">
+                    <h4>মূল কথা</h4>
+                    <p>WhatsApp অফিসিয়ালি Personal/Business অ্যাপের জন্য দৈনিক কল লিমিট <strong>প্রকাশ করে না</strong>। Anti-abuse <strong>pattern + reports</strong> ভিত্তিক, fixed counter নয়।</p>
+                </div>
+
+                <h3>অফিসিয়ালি ডকুমেন্টেড (Meta সোর্স থেকে যাচাইযোগ্য)</h3>
+                <table>
+                    <thead>
+                        <tr><th>সোর্স</th><th>কল লিমিট সম্পর্কে কী বলে</th><th>মান</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>WhatsApp Help Center [<a href="https://faq.whatsapp.com" target="_blank">link</a>]</td>
+                            <td>Personal/Business অ্যাপের জন্য কোনো দৈনিক কল লিমিট প্রকাশ করা হয়নি</td>
+                            <td><span class="badge badge-official">🟢 অফিসিয়াল</span></td>
+                        </tr>
+                        <tr>
+                            <td>WhatsApp ToS [<a href="https://www.whatsapp.com/legal/terms-of-service" target="_blank">link</a>]</td>
+                            <td>"Automated/bulk" ব্যবহার নিষিদ্ধ, কিন্তু কোনো নির্দিষ্ট সংখ্যা নেই</td>
+                            <td><span class="badge badge-official">🟢 অফিসিয়াল</span></td>
+                        </tr>
+                        <tr>
+                            <td>Acceptable Use Policy [<a href="https://www.whatsapp.com/legal/business-policy" target="_blank">link</a>]</td>
+                            <td>"আমরা signals ব্যবহার করে abuse detect করি" — কোনো threshold প্রকাশিত নয়</td>
+                            <td><span class="badge badge-official">🟢 অফিসিয়াল</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Pattern-ভিত্তিক anti-abuse — ডকুমেন্টেড mechanism</h3>
+                <p>Meta-এর Acceptable Use Policy <span class="badge badge-official">🟢 অফিসিয়াল</span> থেকে নিশ্চিত — abuse detection signals-ভিত্তিক:</p>
+                <ul>
+                    <li>User reports ("Block + Report" press) — <strong>সবচেয়ে শক্তিশালী signal</strong></li>
+                    <li>Behavioral pattern (calling pattern, message pattern, timing)</li>
+                    <li>একাউন্টের বয়স, verification status, history</li>
+                    <li>Ring-to-answer ratio (কল)</li>
+                    <li>Recipient interaction (replies, blocks)</li>
+                    <li>Cross-account correlation (একই IP, device fingerprint)</li>
+                </ul>
+
+                <h3>কমিউনিটি-রিপোর্টেড পর্যবেক্ষণ (anecdotal)</h3>
+                <div class="card card-warning">
+                    <p><span class="badge badge-estimate">🔴 আনুমানিক</span> ফোরাম থেকে aggregated সাধারণ পর্যবেক্ষণ (NOT factual rules):</p>
+                    <ul>
+                        <li>৫০+ অপরিচিত নম্বরে cold call করার পর প্রায়ই ব্যান হয় বলে রিপোর্ট</li>
+                        <li>Ring-and-hangup pattern detect হলে দ্রুত ফ্ল্যাগ</li>
+                        <li>Verified Business একাউন্টও কম volume-এ ব্যান হয় বলে রিপোর্ট</li>
+                        <li><strong>Variance প্রচুর</strong> — একই volume, ভিন্ন একাউন্টের ভিন্ন outcome</li>
+                    </ul>
+                    <p>এগুলো individual user reports — statistical reliability কম।</p>
+                </div>
+
+                <h3>সিদ্ধান্ত-গ্রহণের জন্য ব্যবহারিক implication</h3>
+                <table>
+                    <thead>
+                        <tr><th>প্রশ্ন</th><th>সৎ উত্তর</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>নিরাপদ দৈনিক কল সংখ্যা কত?</td><td>অফিসিয়ালি ডিফাইন্ড নেই। Conservative ব্যবহার পরামর্শ।</td></tr>
+                        <tr><td>X কল/দিন-এর পর guaranteed ban?</td><td>কোনো নির্দিষ্ট সংখ্যায় guaranteed না। Pattern + reports বেশি গুরুত্বপূর্ণ।</td></tr>
+                        <tr><td>Determinism চান?</td><td>অফিসিয়াল ফ্রি পথে সম্ভব না — paid alternative প্রয়োজন।</td></tr>
+                        <tr><td>Risk eliminate করা যায়?</td><td>না — minimize করা যায়, eliminate না।</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>WhatsApp Help Center: <a href="https://faq.whatsapp.com" target="_blank">https://faq.whatsapp.com</a></li>
+                        <li>Terms of Service: <a href="https://www.whatsapp.com/legal/terms-of-service" target="_blank">https://www.whatsapp.com/legal/terms-of-service</a></li>
+                        <li>Acceptable Use Policy: <a href="https://www.whatsapp.com/legal/business-policy" target="_blank">https://www.whatsapp.com/legal/business-policy</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 3 -->
+            <section class="section" id="s3">
+                <h2>৩. মেসেজ লিমিট — সংক্ষিপ্ত সারাংশ</h2>
+                <p class="lead">Personal/Business অ্যাপের দৈনিক message limit সম্পর্কে Meta-এর অফিসিয়াল অবস্থান এবং bulk messaging-এর বাস্তব ঝুঁকি।</p>
+
+                <h3>Personal / Business অ্যাপ (ফ্রি, mobile-installed)</h3>
+                <div class="card card-success">
+                    <p><span class="badge badge-official">🟢 অফিসিয়াল</span> Meta নিজেই Help Center-এ স্পষ্ট করেছে — Personal বা Business অ্যাপের জন্য কোনো নির্দিষ্ট দৈনিক message limit প্রকাশ করা হয়নি। <a href="https://faq.whatsapp.com" target="_blank">[Help Center-এ যাচাই]</a></p>
+                </div>
+
+                <h3>Bulk messaging-এর ঝুঁকি (Personal/Business অ্যাপ)</h3>
+                <ul>
+                    <li>Recipient reports → দ্রুততম ব্যান-পথ</li>
+                    <li>Pattern detection → ফ্ল্যাগ</li>
+                    <li>কলের মতোই: pattern-ভিত্তিক, counter-ভিত্তিক না</li>
+                    <li>একই message বহু recipient-কে পাঠালে template-spam pattern হিসেবে detect হতে পারে</li>
+                </ul>
+
+                <h3>কমিউনিটি-রিপোর্টেড পর্যবেক্ষণ (anecdotal)</h3>
+                <div class="card card-warning">
+                    <p><span class="badge badge-estimate">🔴 আনুমানিক</span> ফোরাম থেকে aggregated সাধারণ পর্যবেক্ষণ:</p>
+                    <ul>
+                        <li>একই text বহু unknown recipient-কে পাঠালে দ্রুত flag</li>
+                        <li>Reply আসা message-গুলো generally safer</li>
+                        <li>ব্যবহারকারী block বা report করলে cumulative score গঠিত হয়</li>
+                        <li><strong>নির্দিষ্ট safe সংখ্যা officially নেই</strong></li>
+                    </ul>
+                </div>
+
+                <div class="key-fact">
+                    <h4>মূল কথা</h4>
+                    <p>Personal/Business অ্যাপে দৈনিক message-এর জন্য কোনো published limit নেই। Anti-abuse সম্পূর্ণ pattern + reports ভিত্তিক — কলের মতোই opaque system।</p>
+                </div>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>WhatsApp Help Center: <a href="https://faq.whatsapp.com" target="_blank">https://faq.whatsapp.com</a></li>
+                        <li>Acceptable Use Policy: <a href="https://www.whatsapp.com/legal/business-policy" target="_blank">https://www.whatsapp.com/legal/business-policy</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 4 -->
+            <section class="section" id="s4">
+                <h2>৪. Business API (Cloud API) — বিস্তারিত লিমিটেশন</h2>
+                <p class="lead">Meta-এর অফিসিয়াল paid solution। ডকুমেন্টেড features, tier-ভিত্তিক লিমিট, transparent pricing। কিন্তু আমাদের use case-এর জন্য একটি গুরুত্বপূর্ণ deprecation আছে।</p>
+
+                <h3>ডকুমেন্টেড Features <span class="badge badge-official">🟢 অফিসিয়াল</span></h3>
+                <ul>
+                    <li>Templated messages (HSM — Highly Structured Messages)</li>
+                    <li>যেসব ব্যবহারকারী আগে chat শুরু করেছে তাদের সাথে Two-way messaging</li>
+                    <li>Webhook-ভিত্তিক reply receiving</li>
+                    <li>Customer service automation (away messages, quick replies)</li>
+                    <li>Media (ছবি, ভিডিও, ডকুমেন্ট) আপলোড/সেন্ড</li>
+                    <li>Business Solution Providers (BSPs)-এর মাধ্যমে multi-agent inbox</li>
+                </ul>
+
+                <h3>ডকুমেন্টেড লিমিট <span class="badge badge-official">🟢 অফিসিয়াল</span></h3>
+                <table>
+                    <thead>
+                        <tr><th>লিমিটের ধরন</th><th>মান</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>দৈনিক messaging tier</td><td>১k / ১০k / ১০০k / আনলিমিটেড (Section ৩ দ্রষ্টব্য)</td></tr>
+                        <tr><td>Per-conversation pricing</td><td>দেশ/category অনুযায়ী পরিবর্তনশীল</td></tr>
+                        <tr><td>Business verification</td><td>উচ্চ tier-এর জন্য আবশ্যক</td></tr>
+                        <tr><td>Template approval</td><td>২৪-৪৮ ঘণ্টা review</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>গুরুত্বপূর্ণ Deprecation (আমাদের use case-এর জন্য জরুরি)</h3>
+                <div class="card card-warning">
+                    <p><span class="badge badge-official">🟢 অফিসিয়াল</span> <strong>Contacts endpoint (registration check) ২০২২ সালে DEPRECATED।</strong> [<a href="https://developers.facebook.com/docs/whatsapp/api/contacts" target="_blank">রেফারেন্স</a>]</p>
+                    <p>আগে: <code>POST /v1/contacts</code> দিয়ে check করা যেত কার WhatsApp আছে। <strong>এখন কাজ করে না।</strong></p>
+                    <p>মানে: Cloud API দিয়ে কোনো নম্বরে WhatsApp আছে কি না detect করা <strong>যায় না</strong>। শুধুমাত্র unofficial libraries (যেমন <a href="https://github.com/pedroslopez/whatsapp-web.js" target="_blank">whatsapp-web.js</a>) দিয়ে সম্ভব।</p>
+                </div>
+
+                <h3>খরচের বিশ্লেষণ</h3>
+                <table>
+                    <thead>
+                        <tr><th>আইটেম</th><th>খরচ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>প্রতি মেসেজ (বাংলাদেশ, marketing category)</td><td>~$0.0395 USD ≈ ~৪.৭ টাকা</td></tr>
+                        <tr><td>প্রতি মেসেজ (utility/auth)</td><td>কম, পরিবর্তনশীল</td></tr>
+                        <tr><td>Business verification</td><td>ফ্রি, সময়সাপেক্ষ (১-২ সপ্তাহ)</td></tr>
+                        <tr><td>Cloud API hosting</td><td>ফ্রি (Meta হোস্ট করে)</td></tr>
+                        <tr><td>BSP (ঐচ্ছিক intermediary)</td><td>পরিবর্তনশীল</td></tr>
+                    </tbody>
+                </table>
+                <p><em>Pricing source: <a href="https://developers.facebook.com/docs/whatsapp/pricing" target="_blank">Meta Cloud API pricing page</a> <span class="badge badge-official">🟢 অফিসিয়াল</span></em></p>
+
+                <h3>সুবিধা vs অসুবিধা</h3>
+                <table>
+                    <thead>
+                        <tr><th>সুবিধা</th><th>অসুবিধা</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>অফিসিয়াল Meta product, transparent SLA</td>
+                            <td>প্রতিটি মেসেজে paid</td>
+                        </tr>
+                        <tr>
+                            <td>ডকুমেন্টেড rate limits</td>
+                            <td>Business verification আবশ্যক</td>
+                        </tr>
+                        <tr>
+                            <td>ব্যান-এর ঝুঁকি নেই (লিমিটের মধ্যে থাকলে)</td>
+                            <td>Registration check capability নেই</td>
+                        </tr>
+                        <tr>
+                            <td>মিলিয়ন মেসেজ scale করা যায়</td>
+                            <td>Template approval-এর সময় লাগে</td>
+                        </tr>
+                        <tr>
+                            <td>সকল ToS-এর সাথে compliant</td>
+                            <td>`isRegisteredUser` use case replace করতে পারে না</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="key-fact">
+                    <h4>"নম্বর ডিটেকশন" use case-এর জন্য implication</h4>
+                    <p>Cloud API <strong>detect করতে পারে না</strong> কোনো নম্বরে WhatsApp আছে কি না (২০২২ থেকে deprecated)। শুধু message পাঠানো যায়। ডিটেকশনের জন্য বিকল্প: <strong>whatsapp-web.js</strong> (ফ্রি, ব্যান ঝুঁকি) অথবা <strong>Twilio Lookup</strong> (paid, ~$0.005/check)।</p>
+                </div>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>Cloud API Overview: <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/overview" target="_blank">developers.facebook.com/docs/whatsapp/cloud-api/overview</a></li>
+                        <li>Pricing: <a href="https://developers.facebook.com/docs/whatsapp/pricing" target="_blank">developers.facebook.com/docs/whatsapp/pricing</a></li>
+                        <li>Contacts Deprecation: <a href="https://developers.facebook.com/docs/whatsapp/api/contacts" target="_blank">developers.facebook.com/docs/whatsapp/api/contacts</a></li>
+                        <li>Twilio Lookup (বিকল্প): <a href="https://www.twilio.com/docs/lookup/v2-api" target="_blank">twilio.com/docs/lookup/v2-api</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 5 -->
+            <section class="section" id="s5">
+                <h2>৫. index2.html নম্বর ডিটেকশন — লিমিট বিশ্লেষণ</h2>
+                <p class="lead">আমাদের বর্তমান implementation কীভাবে কাজ করে, কী কী ডকুমেন্টেড vs আনুমানিক, এবং scale-এ কী হয়।</p>
+
+                <h3>পদ্ধতির সংক্ষিপ্ত বিবরণ <span class="badge badge-official">🟢 অফিসিয়াল</span></h3>
+                <ul>
+                    <li>Library: <a href="https://github.com/pedroslopez/whatsapp-web.js" target="_blank">whatsapp-web.js</a> (open-source, Apache-2 license)</li>
+                    <li>API call: <code>client.isRegisteredUser('880XXX@c.us')</code></li>
+                    <li>Mechanism: Puppeteer (headless Chrome) → web.whatsapp.com automate করে lookup query</li>
+                    <li>Library author: স্বতন্ত্র maintainer (Pedro S. Lopez), <strong>Meta-affiliated নয়</strong></li>
+                    <li>আপনার contact data Meta-এর সার্ভারে যায় (যেভাবে normal WhatsApp ব্যবহারে যেত), library author-এর কাছে নয়</li>
+                </ul>
+
+                <h3>সোর্সের মান অনুযায়ী লিমিট তথ্য</h3>
+
+                <h4><span class="badge badge-official">🟢 অফিসিয়ালি ডকুমেন্টেড</span></h4>
+                <ul>
+                    <li>প্রতি WhatsApp একাউন্টে maximum linked devices: <strong>৪</strong> [<a href="https://faq.whatsapp.com/378279809275439" target="_blank">Help Center</a>]</li>
+                    <li>WhatsApp ToS automated/bulk ব্যবহার নিষিদ্ধ করে [<a href="https://www.whatsapp.com/legal/terms-of-service" target="_blank">ToS</a>]</li>
+                    <li>Anti-abuse system বিদ্যমান (signals-ভিত্তিক) [<a href="https://www.whatsapp.com/legal/business-policy" target="_blank">AUP</a>]</li>
+                </ul>
+
+                <h4><span class="badge badge-inferred">🟡 ডকুমেন্টেড behavior থেকে অনুমিত</span></h4>
+                <ul>
+                    <li>Automation detection — bulk lookups eventually flagged হবে (pattern-ভিত্তিক, কোনো নির্দিষ্ট counter নেই)</li>
+                    <li>একাউন্ট-level rate limiting বিদ্যমান (পলিসিতে উল্লেখ আছে, সংখ্যা দেওয়া নেই)</li>
+                    <li>User reports ব্যান triggers (primary signal হিসেবে ডকুমেন্টেড)</li>
+                </ul>
+
+                <h4><span class="badge badge-estimate">🔴 কমিউনিটি আনুমানিক (যাচাইহীন)</span></h4>
+                <div class="card card-warning">
+                    <p>নিচের সংখ্যাগুলো <strong>ফোরাম/ব্লগ থেকে কমিউনিটি-রিপোর্টেড পর্যবেক্ষণ</strong>, Meta-এর অফিসিয়াল পলিসি নয়। প্রতি একাউন্টে variance অনেক।</p>
+                    <ul>
+                        <li>প্রতিদিন ~২০০ লুকআপ প্রতি একাউন্ট: খুব কম ব্যান ঝুঁকি বলে রিপোর্ট</li>
+                        <li>~৫০০-১০০০/দিন: মাঝারি ঝুঁকি বলে রিপোর্ট</li>
+                        <li>~২০০০+/দিন: উচ্চ ব্যান ঝুঁকি বলে রিপোর্ট</li>
+                        <li>২৪/৭ even-spread (jitter সহ) burst-এর তুলনায় কম ঝুঁকিপূর্ণ মনে হয় (কমিউনিটি অনুযায়ী)</li>
+                        <li>Multi-account parallelization সম্ভব (প্রতি একাউন্টে ৪ linked devices technically)</li>
+                    </ul>
+                </div>
+
+                <h3>Scale বিশ্লেষণ (১০ লক্ষ contacts উদাহরণ)</h3>
+                <p><span class="badge badge-estimate">🔴 কমিউনিটি আনুমানিক</span> ৫টি একাউন্ট দিয়ে গণিত:</p>
+                <table>
+                    <thead>
+                        <tr><th>প্রতি একাউন্টে গতি</th><th>মোট দৈনিক</th><th>১০ লক্ষ backfill সময়</th><th>ঝুঁকি প্রোফাইল</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>২০০/দিন (কম ঝুঁকি est.)</td><td>১,০০০/দিন</td><td>~২.৭৪ বছর</td><td>কম ব্যান ঝুঁকি</td></tr>
+                        <tr><td>৫০০/দিন (মাঝারি est.)</td><td>২,৫০০/দিন</td><td>~১.১ বছর</td><td>মাঝারি ব্যান ঝুঁকি</td></tr>
+                        <tr><td>১,০০০/দিন (মাঝারি-উচ্চ est.)</td><td>৫,০০০/দিন</td><td>~৬.৬ মাস</td><td>মাঝারি-উচ্চ ব্যান ঝুঁকি</td></tr>
+                    </tbody>
+                </table>
+                <p>২০টি একাউন্ট setup (৫টি PC × ৪ একাউন্ট প্রতি PC):</p>
+                <table>
+                    <thead>
+                        <tr><th>প্রতি একাউন্টে গতি</th><th>মোট দৈনিক</th><th>১০ লক্ষ backfill সময়</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>২০০/দিন</td><td>৪,০০০/দিন</td><td>~২৫০ দিন (~৮.৩ মাস)</td></tr>
+                        <tr><td>৫০০/দিন</td><td>১০,০০০/দিন</td><td>~১০০ দিন (~৩.৩ মাস)</td></tr>
+                        <tr><td>১,০০০/দিন</td><td>২০,০০০/দিন</td><td>~৫০ দিন (~১.৭ মাস)</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>প্রোডাকশন সুপারিশ</h3>
+                <ol>
+                    <li><strong>Conservative volume</strong> প্রতি একাউন্টে (কমিউনিটি-পরামর্শ ~২০০/দিন baseline)</li>
+                    <li><strong>Multi-account architecture</strong> shared queue সহ (DB-coordinated)</li>
+                    <li><strong>Random delays</strong> (৬০-১২০ সেকেন্ড jitter, ২৪/৭ even spread)</li>
+                    <li><strong>Disposable secondary numbers</strong> (কখনই primary না)</li>
+                    <li><strong>Auto-detect ban</strong> + switch logic কোডে</li>
+                    <li><strong>Replacement SIMs</strong> প্রস্তুত (কমিউনিটি অনুযায়ী বছরে ১০-৩০% একাউন্ট হারানোর সম্ভাবনা)</li>
+                    <li><strong>Day-০ fallback UX</strong>: ডিটেকশন complete হওয়ার আগেই দু'টি button দেখানো; progressive enrichment</li>
+                </ol>
+
+                <h3>বিকল্প: Paid Lookup (deterministic)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Provider</th><th>১০ লক্ষের জন্য খরচ</th><th>নির্ভুলতা</th><th>ঝুঁকি</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Twilio Lookup (HLR + WhatsApp) <span class="badge badge-official">🟢 অফিসিয়াল</span></td><td>~$৫,০০০-১০,০০০</td><td>উচ্চ, অফিসিয়াল</td><td>নেই</td></tr>
+                        <tr><td>MessageBird Numbers API</td><td>~$৫,০০০</td><td>উচ্চ</td><td>নেই</td></tr>
+                        <tr><td>whatsapp-web.js (বর্তমান ফ্রি)</td><td>$০ + SIM খরচ</td><td>উচ্চ</td><td>Pattern-ভিত্তিক ব্যান ঝুঁকি</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="key-fact">
+                    <h4>সিদ্ধান্ত-গ্রহণ ফ্রেমওয়ার্ক</h4>
+                    <p>ফ্রি পথ: ২-৮ মাস backfill, variance + ব্যান ঝুঁকি, $০-১০০০ setup, চলমান management। Paid পথ: ঘণ্টার মধ্যে, deterministic, $৫-১০k এককালীন, কোনো চলমান ঝুঁকি নেই। Trade-off নির্ভর করে cost tolerance vs time tolerance vs operational complexity acceptance-এর উপর।</p>
+                </div>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>whatsapp-web.js library: <a href="https://github.com/pedroslopez/whatsapp-web.js" target="_blank">github.com/pedroslopez/whatsapp-web.js</a></li>
+                        <li>Linked devices তথ্য: <a href="https://faq.whatsapp.com/378279809275439" target="_blank">faq.whatsapp.com (Linked Devices)</a></li>
+                        <li>WhatsApp ToS: <a href="https://www.whatsapp.com/legal/terms-of-service" target="_blank">whatsapp.com/legal/terms-of-service</a></li>
+                        <li>Twilio Lookup: <a href="https://www.twilio.com/docs/lookup/v2-api" target="_blank">twilio.com/docs/lookup/v2-api</a></li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Business App (NOT Business API) -->
+            <section class="section" id="s6">
+                <h2>৫. WhatsApp Business অ্যাপ — সুবিধা ও অসুবিধা</h2>
+                <p class="lead">Client Business <strong>অ্যাপ</strong> ব্যবহার করতে চাচ্ছেন (Business API নয়)। Business অ্যাপ একটি ফ্রি mobile/desktop অ্যাপ যা ছোট-মাঝারি ব্যবসার জন্য তৈরি — Personal WhatsApp-এর সাথে একই infrastructure-এ চলে কিন্তু কিছু extra features আছে।</p>
+
+                <div class="key-fact">
+                    <h4>মূল পার্থক্য মনে রাখা জরুরি</h4>
+                    <p><strong>Business অ্যাপ</strong> = ফ্রি mobile/desktop app, Play Store/App Store থেকে install করা যায়, ছোট ব্যবসার জন্য। <strong>Business API (Cloud API)</strong> = paid official Meta solution, server-to-server integration। দু'টো সম্পূর্ণ আলাদা product।</p>
+                </div>
+
+                <h3>Business অ্যাপের সুবিধা <span class="badge badge-official">🟢 অফিসিয়াল</span></h3>
+                <table>
+                    <thead>
+                        <tr><th>ফিচার</th><th>বর্ণনা</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>সম্পূর্ণ ফ্রি</td><td>Play Store / App Store থেকে free download, কোনো subscription বা per-message charge নেই</td></tr>
+                        <tr><td>সহজ setup</td><td>App install + phone number verify = কাজ শুরু। Personal একাউন্টের মতোই</td></tr>
+                        <tr><td>Business Profile</td><td>লোগো, ঠিকানা, business hours, website, email, description দেখানো যায়</td></tr>
+                        <tr><td>Catalog</td><td>পণ্য/সেবার ছবি + দাম + বিবরণ showcase করা যায় in-app</td></tr>
+                        <tr><td>Quick Replies</td><td>ঘন ঘন পাঠানো reply template হিসেবে save করে দ্রুত পাঠানো যায়</td></tr>
+                        <tr><td>Labels</td><td>chat-গুলো organize করা যায় (নতুন গ্রাহক, pending order, paid customer ইত্যাদি)</td></tr>
+                        <tr><td>Away/Greeting messages</td><td>অফিস টাইমের বাইরে auto-reply, নতুন chat-এ welcome message</td></tr>
+                        <tr><td>Statistics</td><td>মেসেজ sent/delivered/read এর basic stats</td></tr>
+                        <tr><td>Linked Devices</td><td>WhatsApp Web/Desktop এ ৪টি পর্যন্ত device link করা যায় (Personal-এর মতোই)</td></tr>
+                        <tr><td>Verified Badge (limited)</td><td>কিছু large business সবুজ badge পেতে পারে (eligibility-ভিত্তিক)</td></tr>
+                    </tbody>
+                </table>
+                <p><em>Reference: <a href="https://www.whatsapp.com/business" target="_blank">WhatsApp Business অফিসিয়াল পেজ</a></em></p>
+
+                <h3>Business অ্যাপের অসুবিধা</h3>
+                <h4>🟢 ডকুমেন্টেড সীমাবদ্ধতা</h4>
+                <ul>
+                    <li>১ phone number = ১ Business একাউন্ট (Personal-এর মতোই)। একই নম্বরে Personal + Business একসাথে চলবে না</li>
+                    <li>Linked devices সর্বোচ্চ ৪টি — production scale-এ কম</li>
+                    <li>Built-in API/automation নেই — bulk operation এর জন্য unofficial library (যেমন whatsapp-web.js) লাগবে, যা ToS-এর gray area</li>
+                    <li>Cloud API-এর মতো template message non-saved contacts-কে initiate করার সুযোগ নেই</li>
+                    <li>Multi-agent inbox নেই (Cloud API + BSP লাগে এর জন্য)</li>
+                    <li>কোনো SLA, official support tier, ba ban appeal process নেই</li>
+                </ul>
+
+                <h4>🔴 কমিউনিটি-রিপোর্টেড অসুবিধা (anecdotal)</h4>
+                <div class="card card-warning">
+                    <p><span class="badge badge-estimate">🔴 আনুমানিক</span> ফোরাম-aggregated পর্যবেক্ষণ:</p>
+                    <ul>
+                        <li>Business একাউন্ট recipient-এর কাছে business-marked দেখায়, "spam" হিসেবে report করার tendency বেশি</li>
+                        <li>Anti-abuse algorithm Business একাউন্টকে slightly বেশি scrutiny করে বলে রিপোর্ট</li>
+                        <li>Bulk messaging/calling-এ Personal-এর তুলনায় দ্রুত flag হওয়ার অভিযোগ</li>
+                        <li>Business profile + bulk pattern মিলে ban probability ~৩০-৪০% বেশি (যাচাইহীন)</li>
+                        <li>একই infrastructure, কিন্তু trust-level Personal-এর সমান নয়</li>
+                    </ul>
+                </div>
+
+                <h3>আমাদের Number Detection use case-এর জন্য Business অ্যাপ</h3>
+                <table>
+                    <thead>
+                        <tr><th>প্রশ্ন</th><th>উত্তর</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Business অ্যাপ দিয়ে whatsapp-web.js কাজ করবে?</td><td>হ্যাঁ — Linked Devices একই, লাইব্রেরি Personal/Business দু'টোর জন্যই কাজ করে</td></tr>
+                        <tr><td>Detection performance Personal-এর সমান?</td><td>হ্যাঁ — `isRegisteredUser` API একই</td></tr>
+                        <tr><td>Ban risk বেশি/কম?</td><td>কমিউনিটি অনুযায়ী slightly বেশি, কিন্তু officially documented নয়</td></tr>
+                        <tr><td>Catalog/profile features detection-এ কাজে লাগবে?</td><td>না — শুধু messaging/branding-এ</td></tr>
+                        <tr><td>Business অ্যাপ ব্যবহার করার পেশাগত কারণ আছে?</td><td>হ্যাঁ — যদি client communication, branding, profile important হয়</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>সারাংশ — Client Business অ্যাপ ব্যবহার করতে চাইলে</h3>
+                <div class="card card-success">
+                    <p><strong>সুপারিশ:</strong></p>
+                    <ol>
+                        <li><strong>Business অ্যাপ ব্যবহার করুন branding/profile/catalog-এর জন্য</strong> — primary client-facing একাউন্ট হিসেবে valid choice</li>
+                        <li><strong>Detection-এর জন্য Business অ্যাপের secondary numbers ব্যবহার করুন</strong> — primary brand একাউন্ট-এ bulk lookup চালানো risky</li>
+                        <li><strong>Detection-specific একাউন্টগুলোতে Personal app পছন্দনীয়</strong> — slightly কম ban probability (community estimate)</li>
+                        <li><strong>Mixed setup</strong> — client-facing communication = Business অ্যাপ, background detection = Personal অ্যাপের secondary numbers</li>
+                        <li><strong>Backup/replacement plan</strong> — Business একাউন্ট ban হলে branding loss বেশি, তাই disposable secondary numbers detection-এ</li>
+                    </ol>
+                </div>
+
+                <div class="key-fact">
+                    <h4>মূল কথা</h4>
+                    <p>Business অ্যাপ একটি ভালো choice client-facing communication-এর জন্য — branding, catalog, professional profile সব আছে ফ্রিতে। কিন্তু detection-এর জন্য primary Business একাউন্ট ব্যবহার না করাই বুদ্ধিমানের কাজ — সেখানে disposable secondary numbers ব্যবহার করুন।</p>
+                </div>
+
+                <div class="citations">
+                    <h4>যাচাইযোগ্য সোর্স</h4>
+                    <ol>
+                        <li>WhatsApp Business অ্যাপ: <a href="https://www.whatsapp.com/business" target="_blank">whatsapp.com/business</a></li>
+                        <li>WhatsApp Business Help Center: <a href="https://faq.whatsapp.com/business" target="_blank">faq.whatsapp.com/business</a></li>
+                        <li>Linked Devices info: <a href="https://faq.whatsapp.com/378279809275439" target="_blank">faq.whatsapp.com (Linked Devices)</a></li>
+                        <li>Acceptable Use Policy: <a href="https://www.whatsapp.com/legal/business-policy" target="_blank">whatsapp.com/legal/business-policy</a></li>
+                    </ol>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        const items = document.querySelectorAll('.menu-item');
+        const sections = document.querySelectorAll('.section');
+
+        items.forEach((item) => {
+            item.addEventListener('click', () => {
+                const target = item.dataset.section;
+                items.forEach((i) => i.classList.remove('active'));
+                sections.forEach((s) => s.classList.remove('active'));
+                item.classList.add('active');
+                document.getElementById(target).classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
