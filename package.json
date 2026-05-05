@@ -1,0 +1,13 @@
+{
+  "name": "voice-to-text",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "check": "node check-whatsapp.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}
