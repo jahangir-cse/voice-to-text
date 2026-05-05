@@ -353,6 +353,87 @@
             }
         }
 
+        .briefing-block {
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 18px 0;
+            position: relative;
+        }
+
+        .briefing-block .time-tag {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--accent);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .briefing-block h3 {
+            margin-top: 6px !important;
+            color: var(--primary);
+        }
+
+        .briefing-block .key-points {
+            list-style: none;
+            margin: 12px 0 0 0;
+        }
+
+        .briefing-block .key-points li {
+            padding: 8px 0 8px 28px;
+            position: relative;
+            font-size: 14px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .briefing-block .key-points li:last-child {
+            border-bottom: none;
+        }
+
+        .briefing-block .key-points li::before {
+            content: '▶';
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+            top: 8px;
+            font-size: 12px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-card {
+            background: var(--primary);
+            color: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .num {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
         .faq-item {
             background: var(--card);
             border: 1px solid var(--border);
@@ -463,6 +544,10 @@
                 <li class="menu-item" data-section="s7">
                     <span class="num">৬</span>
                     <span>FAQ — সাধারণ প্রশ্নোত্তর</span>
+                </li>
+                <li class="menu-item" data-section="s8">
+                    <span class="num">৭</span>
+                    <span>৫ মিনিটের সারাংশ</span>
                 </li>
             </ul>
         </aside>
@@ -1094,6 +1179,117 @@
                         <li>Multi-account feature: <a href="https://faq.whatsapp.com" target="_blank">faq.whatsapp.com</a> (search: "multiple accounts")</li>
                         <li>Linked Devices: <a href="https://faq.whatsapp.com/378279809275439" target="_blank">faq.whatsapp.com (Linked Devices)</a></li>
                     </ol>
+                </div>
+            </section>
+
+            <!-- SECTION 8: 5-Minute Summary -->
+            <section class="section" id="s8">
+                <h2>৭. ৫ মিনিটের সারাংশ</h2>
+                <p class="lead">এক নজরে পুরো বিষয়টি — সম্পূর্ণ presentation না পড়ে শুধু এই section পড়লেই মূল কথা বোঝা যাবে।</p>
+
+                <div class="briefing-block">
+                    <h3>সমস্যা</h3>
+                    <ul class="key-points">
+                        <li>Contact list-এ কোন নম্বরে WhatsApp আছে — automatically চিহ্নিত করা প্রয়োজন</li>
+                        <li>Scale: ১০ লক্ষ contacts</li>
+                        <li>Preference: Free path, WhatsApp Business অ্যাপ</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>মূল সত্য — যা বুঝতেই হবে</h3>
+                    <ul class="key-points">
+                        <li><strong>Meta অফিসিয়ালি কোনো দৈনিক কল/মেসেজ লিমিট প্রকাশ করে না</strong> Personal/Business অ্যাপের জন্য</li>
+                        <li>Anti-abuse system <strong>pattern + user reports</strong> ভিত্তিক, fixed counter নয়</li>
+                        <li>প্রচলিত specific সংখ্যা (৫/দিন, ১০০০/দিন ইত্যাদি) <strong>community estimate</strong>, Meta-এর factual rule নয়</li>
+                        <li>WhatsApp Cloud API-এর registration check feature ২০২২ থেকে deprecated → official API দিয়ে detection সম্ভব নয়</li>
+                        <li>Free detection শুধু `whatsapp-web.js` library দিয়ে — Linked Device হিসেবে কাজ করে</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>১০ লক্ষ Scale-এ বাস্তবতা</h3>
+                    <div class="stat-row">
+                        <div class="stat-card">
+                            <span class="num">৫টি একাউন্ট</span>
+                            <span class="label">২০০/দিন → ২.৭৪ বছর</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="num">২০টি একাউন্ট</span>
+                            <span class="label">১০০০/দিন → ১.৭ মাস</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="num">Paid (Twilio)</span>
+                            <span class="label">$৫-১০k → ঘণ্টায়</span>
+                        </div>
+                    </div>
+                    <ul class="key-points">
+                        <li><strong>৫ একাউন্ট × ২০০/দিন</strong> safe rate-এ ১০ লক্ষ → প্রায় <strong>২.৭ বছর</strong> — অসম্ভব</li>
+                        <li><strong>২০ একাউন্ট (৫ PC × ৪) × ১০০০/দিন</strong> riskier rate → <strong>~১.৭ মাস</strong> — practical</li>
+                        <li>Paid Twilio Lookup → <strong>ঘণ্টার মধ্যে complete</strong>, $৫-১০k এককালীন</li>
+                        <li>Free path-এ ১০-৩০% একাউন্ট বছরে ban হবে — replacement SIMs প্রয়োজন</li>
+                        <li>Page reload-এ live detection নয় — DB cache থেকে দ্রুত render, background-এ ধীরে ধীরে enrich হবে</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>Personal vs Business অ্যাপ</h3>
+                    <table style="margin-top: 14px;">
+                        <thead>
+                            <tr><th>Use Case</th><th>সুপারিশ</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Client-facing communication, branding</td><td><strong>Business অ্যাপ</strong> — profile, catalog, labels</td></tr>
+                            <tr><td>Number detection (background bulk lookup)</td><td><strong>Personal একাউন্ট</strong> — ১০-২০% কম ban risk</td></tr>
+                            <tr><td>Marketing bulk message</td><td><strong>Cloud API (paid)</strong> — official, no ban risk</td></tr>
+                            <tr><td>একই নম্বরে দু'টো একাউন্ট?</td><td><strong>সম্ভব না</strong> — ১ নম্বর = ১ একাউন্ট</td></tr>
+                        </tbody>
+                    </table>
+                    <ul class="key-points">
+                        <li>Best practice: <strong>Mixed setup</strong> — Business অ্যাপ primary client একাউন্টে, Personal disposable numbers detection-এ</li>
+                        <li>SIM Android-এ থাকতে হবে না — button phone থেকে OTP নিয়ে Android-এ verify সম্ভব</li>
+                        <li>whatsapp-web.js দু'টো অ্যাপের জন্যই কাজ করে — code change লাগবে না</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>চূড়ান্ত সুপারিশ — দু'টি পথ</h3>
+                    <h4 style="margin-top: 12px;">পথ ১: Free + Slow Progressive (Recommended starter)</h4>
+                    <ul class="key-points">
+                        <li>Day-০: UI-এ <strong>both buttons always show</strong> (WhatsApp + Call) — কোনো wait নেই</li>
+                        <li>Background-এ ২০ Personal একাউন্ট × ১০০০/দিন detection চলবে</li>
+                        <li>~১.৭ মাসে full backfill, এর মধ্যে UI সবসময় কাজ করছে</li>
+                        <li>Cost: ২০টি SIM (~২,০০০ টাকা) + ৫টি PC বা ১টি VPS ($৫/মাস)</li>
+                    </ul>
+                    <h4 style="margin-top: 16px;">পথ ২: Paid + Fast Deterministic</h4>
+                    <ul class="key-points">
+                        <li>Twilio Lookup API ব্যবহার করে ঘণ্টার মধ্যে সব ১০ লক্ষ check</li>
+                        <li>Cost: $৫,০০০-১০,০০০ (~৫.৫-১১ লাখ টাকা) এককালীন</li>
+                        <li>কোনো ban risk নেই, কোনো management overhead নেই</li>
+                        <li>Pure C#/.NET integration — Node service লাগবে না</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>সংক্ষিপ্ত প্রশ্নোত্তর</h3>
+                    <table>
+                        <thead>
+                            <tr><th>প্রশ্ন</th><th>উত্তর</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>একাউন্ট ban হলে কী হবে?</td><td>Disposable secondary number, replacement plan ready, branding একাউন্ট আলাদা — business loss নেই</td></tr>
+                            <tr><td>Specific limit সংখ্যা কী?</td><td>Officially Meta প্রকাশ করে না; community estimates শুধু planning-এ ব্যবহৃত</td></tr>
+                            <tr><td>Cloud API কেন ব্যবহার করা যাবে না?</td><td>২০২২ থেকে registration check feature deprecated — শুধু message পাঠানো যায়</td></tr>
+                            <tr><td>Detection কতটা accurate?</td><td>Library WhatsApp-এর own server জিজ্ঞেস করে — সরাসরি 100% accurate</td></tr>
+                            <tr><td>User-এর privacy?</td><td>Library author-এর কাছে data যায় না; শুধু Meta-এ — যেমন normal WhatsApp use-এ যেত</td></tr>
+                            <tr><td>১০ লক্ষ-এর বেশি contacts হলে?</td><td>Paid path scale-এ better; free path-এ আনুপাতিক বেশি সময় + accounts লাগবে</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="key-fact">
+                    <h4>মূল কথা — তিন বাক্যে</h4>
+                    <p>WhatsApp official দৈনিক লিমিট প্রকাশ করে না, তাই detection ঝুঁকি pattern + reports নির্ভর। ১০ লক্ষ contacts free path-এ ২০ Personal একাউন্ট দিয়ে ~১.৭ মাসে complete করা যায়, এই সময়ে UI দু'টো button দেখাবে। Budget থাকলে paid Twilio Lookup ঘণ্টার মধ্যে সম্পূর্ণ + zero risk।</p>
                 </div>
             </section>
 
