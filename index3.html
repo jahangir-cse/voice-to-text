@@ -1287,6 +1287,136 @@
                     </table>
                 </div>
 
+                <div class="briefing-block">
+                    <h3>একাউন্ট ব্যান এড়ানোর জন্য করণীয়</h3>
+                    <p style="margin-top: 8px;">নিচের নিয়মগুলো অনুসরণ করলে ব্যানের ঝুঁকি অনেক কমানো যায় (সম্পূর্ণ eliminate করা যায় না, কিন্তু practically manageable):</p>
+
+                    <h4 style="margin-top: 16px;">🔢 Volume Control</h4>
+                    <ul class="key-points">
+                        <li>প্রতি একাউন্টে দৈনিক <strong>conservative limit</strong> মেনে চলুন (২০০-১০০০/দিন বেশি না)</li>
+                        <li>একদিনে hard limit ছাড়াবেন না, এমনকি কাজ পেছালেও</li>
+                        <li>Daily quota শেষ হলে script automatically পরের দিন পর্যন্ত wait করবে</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">⏱️ Timing & Pattern</h4>
+                    <ul class="key-points">
+                        <li>প্রতি check-এর মধ্যে <strong>random delay (৬০-১২০ সেকেন্ড)</strong> দিন — fixed interval দিলে script signature detect হয়</li>
+                        <li>২৪ ঘণ্টা even spread করুন — ১ ঘণ্টায় ১০০০ check বার্স্ট করবেন না</li>
+                        <li>Number list <strong>shuffle</strong> করুন — sequential order (8801701..., 8801702...) দিলে algorithm দ্রুত detect করে</li>
+                        <li>মাঝে মাঝে ছোট break (১৫-৩০ মিনিট) automatic schedule করুন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">📱 Account Setup</h4>
+                    <ul class="key-points">
+                        <li><strong>Primary personal নম্বর কখনই ব্যবহার করবেন না</strong> — শুধু disposable secondary SIM</li>
+                        <li>নতুন SIM-এ WhatsApp install করার পর <strong>১-২ সপ্তাহ normal use</strong> করুন (chat, status, contacts add) — এটাকে বলে "warmup"</li>
+                        <li>Detection script-এর জন্য <strong>Personal account</strong> ব্যবহার করুন, Business অ্যাপ নয় (Business-এ scrutiny বেশি)</li>
+                        <li>প্রতিটি একাউন্টে <strong>profile picture, name, status</strong> set করুন — খালি একাউন্ট suspicious লাগে</li>
+                        <li>মাঝে মাঝে real মানুষের সাথে chat/call করুন detection-চলা একাউন্ট থেকে — "real user" signal বজায় থাকে</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">🌐 Network & Infrastructure</h4>
+                    <ul class="key-points">
+                        <li><strong>Residential ISP</strong> (বাসা/অফিসের internet) ব্যবহার করুন — VPS/datacenter IP দ্রুত flagged হয়</li>
+                        <li>VPN ব্যবহার করবেন না — সাধারণত উল্টো effect হয়</li>
+                        <li>একই IP থেকে ৪-৫টির বেশি একাউন্ট চালালে cross-account correlation detect হতে পারে — multiple ISPs/PCs use করুন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">🛡️ Code-level Safeguards</h4>
+                    <ul class="key-points">
+                        <li>Script-এ <strong>auto-detect ban</strong> logic রাখুন (`auth_failure` event monitor) → ban হলে immediate stop</li>
+                        <li>Ban detect হলে সেই একাউন্ট disable, বাকি একাউন্ট কাজ চালিয়ে যাবে</li>
+                        <li>Error rate বেশি হলে script সব stop করে alert পাঠাবে</li>
+                        <li>Logs-এ track করুন: কোন একাউন্ট কতগুলো check করেছে, কখন error হয়েছে</li>
+                        <li>একই নম্বর বার বার check করবেন না — DB-তে cache রাখুন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">🔄 Backup & Recovery Plan</h4>
+                    <ul class="key-points">
+                        <li>সবসময় <strong>২-৩টি extra SIM</strong> হাতে রাখুন replacement-এর জন্য</li>
+                        <li>Ban হওয়া একাউন্ট-এর দরকার নেই — নতুন SIM-এ নতুন একাউন্ট বানিয়ে continue করুন</li>
+                        <li>DB-তে progress save থাকবে, ban হলেও কাজ হারাবে না</li>
+                        <li>Branding/client-facing একাউন্ট সম্পূর্ণ আলাদা রাখুন detection-চলা একাউন্ট থেকে</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">⚠️ যা করবেন না</h4>
+                    <ul class="key-points">
+                        <li>❌ ব্যান হওয়া নম্বরে আবার appeal বা automation চালাবেন না — permanent ban হতে পারে</li>
+                        <li>❌ একই device-এ অনেক একাউন্ট login রাখবেন না (max ৪টি linked devices/একাউন্ট)</li>
+                        <li>❌ Sequential numbers (পরপর) check করবেন না</li>
+                        <li>❌ Burst pattern (অল্প সময়ে অনেক) avoid করুন</li>
+                        <li>❌ Detection একাউন্ট থেকে call/message recipient-কে পাঠাবেন না — শুধু lookup-এ সীমাবদ্ধ রাখুন</li>
+                    </ul>
+                </div>
+
+                <div class="briefing-block">
+                    <h3>Call ব্যান এড়ানোর জন্য করণীয়</h3>
+                    <div class="card card-success" style="margin-top: 10px;">
+                        <p><strong>প্রথমে clarify:</strong> Application-এর "Call" button (`tel:` link) কিন্তু WhatsApp call নয় — এটা সরাসরি phone-এর dialer খোলে cellular call-এর জন্য, WhatsApp-এর সাথে এর কোনো সম্পর্ক নেই, তাই কোনো WhatsApp ban risk নেই। নিচের নিয়মগুলো শুধু <strong>WhatsApp voice/video call</strong> (অ্যাপের ভেতরের call) ব্যবহারের জন্য।</p>
+                    </div>
+
+                    <h4 style="margin-top: 16px;">🎯 Cold Call এড়িয়ে চলুন</h4>
+                    <ul class="key-points">
+                        <li><strong>অপরিচিত নম্বরে cold call করবেন না</strong> — এটাই দ্রুততম ban path</li>
+                        <li>শুধু সেই recipient-কে call করুন যিনি আপনাকে message করেছেন বা প্রত্যাশা করছেন</li>
+                        <li>প্রথম ১-২টি text message দিয়ে context তৈরি করুন → পরে call</li>
+                        <li>নতুন একাউন্ট থেকে প্রথম দিনেই call শুরু করবেন না</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">📵 Unanswered Call Pattern এড়ান</h4>
+                    <ul class="key-points">
+                        <li><strong>Ring + hangup pattern সবচেয়ে dangerous</strong> — এটা spam discovery-র signature</li>
+                        <li>প্রতিদিন ৩-৫টির বেশি unanswered call avoid করুন <span class="badge badge-estimate">🔴 আনুমানিক</span></li>
+                        <li>একই নম্বরে বার বার unanswered call করবেন না — instant flag</li>
+                        <li>Recipient ringtone শুনে নাও answer করতে পারে — অপেক্ষা করুন, hangup করবেন না দ্রুত</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">⏰ Call Volume & Timing</h4>
+                    <ul class="key-points">
+                        <li>একদিনে total call <strong>conservative রাখুন</strong> — Business একাউন্টে আরও কম</li>
+                        <li>সব call একই ঘণ্টায় বার্স্ট করবেন না — দিনের বিভিন্ন সময়ে spread করুন</li>
+                        <li>রাত ১১টা–সকাল ৮টার মধ্যে call avoid করুন — bot-like timing হিসেবে detect হতে পারে</li>
+                        <li>ব্যাক-টু-ব্যাক call (এক call শেষ হতেই অন্য call) avoid করুন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">🚨 Recipient Reports এড়ান</h4>
+                    <ul class="key-points">
+                        <li>একটিমাত্র "Block + Report" press থেকেই account flag হতে পারে</li>
+                        <li>Recipient যেন প্রত্যাশা করেন আপনার call — তাই আগে greeting message</li>
+                        <li>Business profile-এ clear identity রাখুন (নাম, কাজের ধরন) — recipient চিনতে পারলে report-এর tendency কম</li>
+                        <li>Group call-এ অপরিচিত মানুষ join করবেন না</li>
+                        <li>Politely respond করুন আপনার call-এ — rude/aggressive tone-এ recipient report করতে পারেন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">🔁 Retry Behavior</h4>
+                    <ul class="key-points">
+                        <li>Missed call হলে সাথে সাথে আবার call করবেন না — text পাঠান বরং</li>
+                        <li>একই দিনে একই নম্বরে ১টির বেশি retry call করবেন না</li>
+                        <li>২-৩ দিন gap রেখে retry করুন যদি জরুরি হয়</li>
+                        <li>Recipient block করলে সেই নম্বর-এ আর কখনই call/message করবেন না</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">👤 Account Type</h4>
+                    <ul class="key-points">
+                        <li>Bulk/cold calling-এর জন্য <strong>Personal একাউন্ট</strong> preferred — Business-এ recipients দ্রুত report করে</li>
+                        <li>Business একাউন্ট রাখুন শুধু saved/expected client-দের সাথে call-এর জন্য</li>
+                        <li>Detection-চলা একাউন্ট থেকে কখনই call করবেন না — শুধু lookup-এ সীমাবদ্ধ রাখুন</li>
+                    </ul>
+
+                    <h4 style="margin-top: 16px;">⚠️ যা করবেন না</h4>
+                    <ul class="key-points">
+                        <li>❌ Sequential numbers-এ পরপর call (8801701..., 8801702...) — script signature</li>
+                        <li>❌ একই recipient-কে দিনে ২+ বার call</li>
+                        <li>❌ Cold contacts-এ video call (voice-এর চেয়ে বেশি intrusive লাগে)</li>
+                        <li>❌ গভীর রাতে / খুব ভোরে call</li>
+                        <li>❌ Detection-এর জন্য call use করার চেষ্টা — এটা lookup-এর চেয়ে বহুগুণ দ্রুত ban এনে দেবে</li>
+                    </ul>
+
+                    <div class="card card-warning" style="margin-top: 14px;">
+                        <p><strong>মনে রাখবেন:</strong> Lookup-এ ban কয়েক সপ্তাহে আসে, কিন্তু abusive call pattern-এ ব্যান <strong>কয়েক ঘণ্টায়</strong> আসতে পারে। তাই call-এর ক্ষেত্রে rules আরও কঠোরভাবে মেনে চলা জরুরি।</p>
+                    </div>
+                </div>
+
                 <div class="key-fact">
                     <h4>মূল কথা — তিন বাক্যে</h4>
                     <p>WhatsApp official দৈনিক লিমিট প্রকাশ করে না, তাই detection ঝুঁকি pattern + reports নির্ভর। ১০ লক্ষ contacts free path-এ ২০ Personal একাউন্ট দিয়ে ~১.৭ মাসে complete করা যায়, এই সময়ে UI দু'টো button দেখাবে। Budget থাকলে paid Twilio Lookup ঘণ্টার মধ্যে সম্পূর্ণ + zero risk।</p>
