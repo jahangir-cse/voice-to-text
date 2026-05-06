@@ -27,7 +27,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 30px;
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
         }
 
         h1 {
@@ -62,8 +62,8 @@
 
         .contact-item {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
-            align-items: center;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) minmax(0, 1fr);
+            align-items: stretch;
             gap: 16px;
             padding: 14px 16px;
             border-bottom: 1px solid #eee;
@@ -185,10 +185,78 @@
             margin-right: 6px;
         }
 
+        .transcript-col .text-body {
+            display: block;
+        }
+
+        .summarize-btn {
+            display: none;
+            margin-top: 8px;
+            background: #1a2b4a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .summarize-btn:hover { background: #2c4373; }
+        .summarize-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .summarize-btn.on { display: inline-block; }
+
+        .summary-col {
+            min-height: 40px;
+            font-size: 13px;
+            color: #1a2b4a;
+            background: #e8f8ee;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid #c8ecd5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+        }
+        .summary-col.empty {
+            color: #aaa;
+            font-style: italic;
+            background: transparent;
+            border-style: dashed;
+            border-color: #e1e7ef;
+        }
+        .summary-col .label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #25803f;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .contact-item {
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "phone actions"
+                    "transcript transcript"
+                    "summary summary";
+            }
+            .phone-number { grid-area: phone; }
+            .actions { grid-area: actions; }
+            .transcript-col { grid-area: transcript; }
+            .summary-col { grid-area: summary; }
+        }
+
         @media (max-width: 640px) {
             .container { padding: 20px 16px; }
             .contact-item {
                 grid-template-columns: 1fr;
+                grid-template-areas:
+                    "phone"
+                    "actions"
+                    "transcript"
+                    "summary";
                 gap: 10px;
             }
             .actions { justify-content: flex-end; }
@@ -233,7 +301,11 @@
                         <a href="tel:${num}" class="icon-btn call" title="Call" data-action="call" data-row="${idx}">${CALL_SVG}</a>
                         <button type="button" class="icon-btn stop" title="Stop & save transcript" data-action="stop" data-row="${idx}" aria-label="Stop recording">${STOP_SVG}</button>
                     </div>
-                    <div class="transcript-col empty" data-row="${idx}">টেক্সট এখানে দেখাবে…</div>
+                    <div class="transcript-col empty" data-row="${idx}">
+                        <span class="text-body">টেক্সট এখানে দেখাবে…</span>
+                        <button type="button" class="summarize-btn" data-action="summarize" data-row="${idx}">সংক্ষেপ করুন</button>
+                    </div>
+                    <div class="summary-col empty" data-row="${idx}">সংক্ষিপ্ত সারাংশ এখানে দেখাবে…</div>
                 </li>`;
         }
 
@@ -282,24 +354,28 @@
         }
 
         function getRowEls(idx) {
+            const item = document.querySelector(`.contact-item[data-row="${idx}"]`);
             return {
-                item: document.querySelector(`.contact-item[data-row="${idx}"]`),
-                transcript: document.querySelector(`.transcript-col[data-row="${idx}"]`),
-                stopBtn: document.querySelector(`.stop[data-row="${idx}"]`),
-                waBtn: document.querySelector(`.whatsapp[data-row="${idx}"]`),
-                callBtn: document.querySelector(`.call[data-row="${idx}"]`),
+                item,
+                transcript: item && item.querySelector('.transcript-col'),
+                textBody: item && item.querySelector('.transcript-col .text-body'),
+                summarizeBtn: item && item.querySelector('.summarize-btn'),
+                summaryCol: item && item.querySelector('.summary-col'),
+                stopBtn: item && item.querySelector('.stop'),
+                waBtn: item && item.querySelector('.whatsapp'),
+                callBtn: item && item.querySelector('.call'),
             };
         }
 
         function updateLiveDisplay() {
-            const { transcript } = getRowEls(session.rowIdx);
-            if (!transcript) return;
+            const { transcript, textBody } = getRowEls(session.rowIdx);
+            if (!transcript || !textBody) return;
             const previewSep = session.committedText && session.sessionFinalText ? " " : "";
             const combined = (session.committedText + previewSep + session.sessionFinalText + " " + session.interimText).trim();
             const elapsed = performance.now() - session.startedAt;
             transcript.classList.remove('empty');
             transcript.classList.add('live');
-            transcript.innerHTML = `<span class="timer">● ${fmtTime(elapsed)}</span>${escapeHtml(combined || "শুনছি…")}`;
+            textBody.innerHTML = `<span class="timer">● ${fmtTime(elapsed)}</span>${escapeHtml(combined || "শুনছি…")}`;
         }
 
         function buildRecognition() {
@@ -402,13 +478,18 @@
             session.restartCount = 0;
             session.lastRestartAt = 0;
 
-            const { item, stopBtn, transcript } = getRowEls(rowIdx);
+            const { item, stopBtn, transcript, textBody, summarizeBtn, summaryCol } = getRowEls(rowIdx);
             if (item) item.classList.add('recording');
             if (stopBtn) stopBtn.classList.add('on');
-            if (transcript) {
+            if (summarizeBtn) summarizeBtn.classList.remove('on');
+            if (summaryCol) {
+                summaryCol.classList.add('empty');
+                summaryCol.textContent = "সংক্ষিপ্ত সারাংশ এখানে দেখাবে…";
+            }
+            if (transcript && textBody) {
                 transcript.classList.remove('empty');
                 transcript.classList.add('live');
-                transcript.textContent = "শুনছি…";
+                textBody.textContent = "শুনছি…";
             }
 
             try {
@@ -443,20 +524,132 @@
             session.sessionFinalText = "";
             session.interimText = "";
 
-            const { item, stopBtn, transcript } = getRowEls(idx);
+            const { item, stopBtn, transcript, textBody, summarizeBtn } = getRowEls(idx);
             if (item) item.classList.remove('recording');
             if (stopBtn) stopBtn.classList.remove('on');
-            if (!transcript) return;
+            if (!transcript || !textBody) { session.rowIdx = -1; return; }
 
             transcript.classList.remove('live');
             if (cancelled || !finalText) {
                 transcript.classList.add('empty');
-                transcript.textContent = "টেক্সট এখানে দেখাবে…";
+                textBody.textContent = "টেক্সট এখানে দেখাবে…";
+                if (summarizeBtn) summarizeBtn.classList.remove('on');
             } else {
                 transcript.classList.remove('empty');
-                transcript.textContent = finalText;
+                textBody.textContent = finalText;
+                transcript.dataset.fullText = finalText;
+                if (summarizeBtn) {
+                    summarizeBtn.classList.add('on');
+                    summarizeBtn.disabled = false;
+                    summarizeBtn.textContent = "সংক্ষেপ করুন";
+                }
             }
             session.rowIdx = -1;
+        }
+
+        // ---------- Summarization (client-side, language-agnostic) ----------
+        function splitSentences(text) {
+            // Split on Bengali daari (।), Western punctuation (.!?), and newlines
+            return text
+                .split(/(?<=[।.!?])\s+|\n+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+
+        function summarize(text) {
+            const clean = text.trim();
+            if (!clean) return "";
+
+            const sentences = splitSentences(clean);
+            const wordCount = clean.split(/\s+/).filter(Boolean).length;
+
+            // Very short input — return as-is
+            if (wordCount <= 25 || sentences.length <= 1) {
+                return sentences[0] || clean;
+            }
+
+            // Score sentences by word frequency (simple extractive summary).
+            const stopwords = new Set([
+                'a','an','the','and','or','but','if','of','at','by','for','to','in','on','is','it','this','that','was','were','be','as','with','from','i','you','he','she','we','they','me','my','your','our',
+                'এবং','কিন্তু','অথবা','যে','যা','কী','কি','এই','সেই','তা','ও','হয়','হয়েছে','ছিল','আছে','একটি','একটা','আমি','তুমি','সে','আমরা','তারা','আপনি','যখন','তখন','কারণ','জন্য'
+            ]);
+            const wordFreq = new Map();
+            for (const w of clean.toLowerCase().split(/\s+/)) {
+                const t = w.replace(/[।.!?,;:"'()\[\]]/g, '');
+                if (!t || stopwords.has(t)) continue;
+                wordFreq.set(t, (wordFreq.get(t) || 0) + 1);
+            }
+
+            const scored = sentences.map((s, i) => {
+                const words = s.toLowerCase().split(/\s+/).map(w => w.replace(/[।.!?,;:"'()\[\]]/g, ''));
+                let score = 0;
+                for (const w of words) score += wordFreq.get(w) || 0;
+                // Normalize by length to avoid favoring very long sentences only
+                const norm = words.length ? score / Math.sqrt(words.length) : 0;
+                return { i, s, score: norm };
+            });
+
+            // Always include the first sentence; pick top-scored from the rest.
+            const targetCount = Math.min(2, sentences.length);
+            const picks = new Set([0]);
+            const ranked = scored.slice(1).sort((a, b) => b.score - a.score);
+            for (const r of ranked) {
+                if (picks.size >= targetCount) break;
+                picks.add(r.i);
+            }
+            const summary = [...picks].sort((a, b) => a - b).map(i => sentences[i]).join(' ');
+
+            // Hard cap to ~40 words to keep it short
+            const summaryWords = summary.split(/\s+/);
+            if (summaryWords.length > 40) {
+                return summaryWords.slice(0, 40).join(' ') + '…';
+            }
+            return summary;
+        }
+
+        async function runSummary(rowIdx) {
+            const { transcript, summaryCol, summarizeBtn } = getRowEls(rowIdx);
+            if (!transcript || !summaryCol) return;
+            const text = (transcript.dataset.fullText || '').trim();
+            if (!text) {
+                showBanner('সংক্ষেপ করার মতো টেক্সট নেই।');
+                return;
+            }
+            if (summarizeBtn) {
+                summarizeBtn.disabled = true;
+                summarizeBtn.textContent = "Gemini কাজ করছে…";
+            }
+            summaryCol.classList.remove('empty');
+            summaryCol.innerHTML = `<span class="label">সারাংশ</span><em style="color:#888;">তৈরি হচ্ছে…</em>`;
+
+            let summary = "";
+            let usedFallback = false;
+            try {
+                const r = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text }),
+                });
+                if (!r.ok) {
+                    const body = await r.json().catch(() => ({}));
+                    throw new Error(body.error || `HTTP ${r.status}`);
+                }
+                const data = await r.json();
+                summary = (data.summary || '').trim();
+            } catch (err) {
+                console.warn('Gemini summarize failed, using local fallback:', err);
+                showBanner('Gemini API fail করেছে, local summary দেখাচ্ছি।');
+                summary = summarize(text);
+                usedFallback = true;
+            }
+
+            if (!summary) summary = summarize(text);
+            summaryCol.innerHTML =
+                `<span class="label">সারাংশ${usedFallback ? ' (offline)' : ''}</span>${escapeHtml(summary)}`;
+            if (summarizeBtn) {
+                summarizeBtn.disabled = false;
+                summarizeBtn.textContent = "আবার সংক্ষেপ করুন";
+            }
         }
 
         // ---------- Click handling ----------
@@ -483,6 +676,12 @@
                 if (session.active && session.rowIdx === rowIdx) {
                     stopSession();
                 }
+                return;
+            }
+
+            if (action === 'summarize') {
+                e.preventDefault();
+                runSummary(rowIdx);
             }
         });
 
