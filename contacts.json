@@ -3,42 +3,56 @@
     "name": "",
     "number": "8801577646482",
     "hasWhatsApp": false,
-    "checkedAt": "2026-05-03T11:45:56.031Z"
+    "checkedAt": "2026-05-03T11:45:56.031Z",
+    "hasTelegram": false,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
   },
   {
     "name": "Mehedy",
     "number": "8801704725466",
     "hasWhatsApp": true,
-    "checkedAt": "2026-05-03T11:46:02.810Z"
+    "checkedAt": "2026-05-03T11:46:02.810Z",
+    "hasTelegram": false,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
   },
   {
     "name": "Shayan Vai",
     "number": "8801704682697",
     "hasWhatsApp": true,
-    "checkedAt": "2026-05-03T11:46:09.928Z"
+    "checkedAt": "2026-05-03T11:46:09.928Z",
+    "hasTelegram": false,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
+  },
+  {
+    "name": "Masum Vaiya",
+    "number": "8801708166057",
+    "hasWhatsApp": false,
+    "checkedAt": "2026-05-03T11:54:04.599Z",
+    "hasTelegram": true,
+    "telegramCheckedAt": "2026-05-06T10:39:10.222Z"
+  },
+  {
+    "name": "Rasel",
+    "number": "8801705979231",
+    "hasWhatsApp": true,
+    "checkedAt": "2026-05-05T02:54:55.910Z",
+    "hasTelegram": true,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
   },
   {
     "name": "Random 01",
-    "number": "8801712345678",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-03T11:54:04.599Z"
-  },
-  {
-    "name": "Random 09",
     "number": "8801890987654",
     "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:53:19.040Z"
+    "checkedAt": "2026-05-05T02:53:19.040Z",
+    "hasTelegram": true,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
   },
   {
-    "name": "Random 10",
+    "name": "Random 02",
     "number": "8801919876543",
     "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:53:25.881Z"
-  },
-  {
-    "name": "Random 24",
-    "number": "8801705979231",
-    "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:54:55.910Z"
+    "checkedAt": "2026-05-05T02:53:25.881Z",
+    "hasTelegram": false,
+    "telegramCheckedAt": "2026-05-06T10:29:53.739Z"
   }
 ]

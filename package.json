@@ -4,11 +4,15 @@
   "private": true,
   "scripts": {
     "check": "node check-whatsapp.js",
+    "check-telegram": "node check-telegram.js",
     "start": "node server.js"
   },
   "dependencies": {
+    "big-integer": "^1.6.52",
     "express": "^4.22.1",
+    "input": "^1.0.1",
     "qrcode-terminal": "^0.12.0",
+    "telegram": "^2.26.16",
     "whatsapp-web.js": "^1.23.0"
   }
 }

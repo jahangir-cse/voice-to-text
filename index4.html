@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact List — Telegram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #29b6f6 0%, #1976d2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 24px;
+            font-size: 24px;
+        }
+
+        .status {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            padding: 20px 0;
+        }
+
+        .contact-list {
+            list-style: none;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        .contact-item:hover {
+            background: #f9f9f9;
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .phone-number {
+            font-size: 17px;
+            color: #333;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .telegram {
+            background: #0088cc;
+        }
+
+        .call {
+            background: #007AFF;
+        }
+
+        .icon-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact List — Telegram</h1>
+        <ul class="contact-list" id="contact-list"></ul>
+        <div class="status" id="status">Loading...</div>
+    </div>
+
+    <script>
+        const TG_SVG = '<svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>';
+        const CALL_SVG = '<svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>';
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+
+        function localDisplay(number) {
+            return number.startsWith('880') ? '0' + number.slice(3) : number;
+        }
+
+        function renderRow(c) {
+            const phone = escapeHtml(localDisplay(c.number));
+            const label = c.name ? `${phone} (${escapeHtml(c.name)})` : phone;
+            const num = encodeURIComponent(c.number);
+            const tgBtn = c.hasTelegram
+                ? `<a href="tg://resolve?phone=${num}" class="icon-btn telegram" title="Telegram Chat">${TG_SVG}</a>`
+                : '';
+            return `
+                <li class="contact-item">
+                    <span class="phone-number">${label}</span>
+                    <div class="actions">
+                        ${tgBtn}
+                        <a href="tel:${num}" class="icon-btn call" title="Call">${CALL_SVG}</a>
+                    </div>
+                </li>`;
+        }
+
+        fetch('/api/contacts')
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((contacts) => {
+                document.getElementById('contact-list').innerHTML =
+                    contacts.map(renderRow).join('');
+                document.getElementById('status').remove();
+            })
+            .catch((err) => {
+                document.getElementById('status').textContent =
+                    'Could not load contacts. Start the server with `npm start`.';
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
