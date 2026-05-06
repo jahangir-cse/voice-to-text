@@ -24,48 +24,6 @@
     "checkedAt": "2026-05-03T11:54:04.599Z"
   },
   {
-    "name": "Random 02",
-    "number": "8801823456789",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:52:36.182Z"
-  },
-  {
-    "name": "Random 03",
-    "number": "8801934567890",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:52:42.122Z"
-  },
-  {
-    "name": "Random 04",
-    "number": "8801645678901",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:52:49.019Z"
-  },
-  {
-    "name": "Random 05",
-    "number": "8801556789012",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:52:55.526Z"
-  },
-  {
-    "name": "Random 06",
-    "number": "8801367890123",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:02.038Z"
-  },
-  {
-    "name": "Random 07",
-    "number": "8801478901234",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:07.813Z"
-  },
-  {
-    "name": "Random 08",
-    "number": "8801789098765",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:13.346Z"
-  },
-  {
     "name": "Random 09",
     "number": "8801890987654",
     "hasWhatsApp": true,
@@ -78,93 +36,9 @@
     "checkedAt": "2026-05-05T02:53:25.881Z"
   },
   {
-    "name": "Random 11",
-    "number": "8801611234567",
-    "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:53:31.703Z"
-  },
-  {
-    "name": "Random 12",
-    "number": "8801522345678",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:38.099Z"
-  },
-  {
-    "name": "Random 13",
-    "number": "8801333456789",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:44.445Z"
-  },
-  {
-    "name": "Random 14",
-    "number": "8801444567890",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:53:50.617Z"
-  },
-  {
-    "name": "Random 15",
-    "number": "8801755678901",
-    "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:53:57.993Z"
-  },
-  {
-    "name": "Random 16",
-    "number": "8801866789012",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:04.373Z"
-  },
-  {
-    "name": "Random 17",
-    "number": "8801977890123",
-    "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:54:10.758Z"
-  },
-  {
-    "name": "Random 18",
-    "number": "8801688901234",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:16.803Z"
-  },
-  {
-    "name": "Random 19",
-    "number": "8801599012345",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:23.434Z"
-  },
-  {
-    "name": "Random 20",
-    "number": "8801300123456",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:29.989Z"
-  },
-  {
-    "name": "Random 21",
-    "number": "8801411234560",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:35.998Z"
-  },
-  {
-    "name": "Random 22",
-    "number": "8801722345601",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:54:43.090Z"
-  },
-  {
-    "name": "Random 23",
-    "number": "8801833456012",
-    "hasWhatsApp": true,
-    "checkedAt": "2026-05-05T02:54:49.112Z"
-  },
-  {
     "name": "Random 24",
     "number": "8801705979231",
     "hasWhatsApp": true,
     "checkedAt": "2026-05-05T02:54:55.910Z"
-  },
-  {
-    "name": "Random 25",
-    "number": "8801655601234",
-    "hasWhatsApp": false,
-    "checkedAt": "2026-05-05T02:55:01.440Z"
   }
 ]

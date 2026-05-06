@@ -17,7 +17,7 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             padding: 20px;
         }
 
@@ -27,7 +27,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 30px;
             width: 100%;
-            max-width: 480px;
+            max-width: 900px;
         }
 
         h1 {
@@ -44,14 +44,27 @@
             padding: 20px 0;
         }
 
+        .banner {
+            margin: 0 0 16px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fdebea;
+            color: #b3261e;
+            font-size: 13px;
+            border: 1px solid #f5c6c2;
+            display: none;
+        }
+        .banner.on { display: block; }
+
         .contact-list {
             list-style: none;
         }
 
         .contact-item {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
             align-items: center;
-            justify-content: space-between;
+            gap: 16px;
             padding: 14px 16px;
             border-bottom: 1px solid #eee;
             transition: background 0.2s;
@@ -65,16 +78,22 @@
             border-bottom: none;
         }
 
+        .contact-item.recording {
+            background: #fff8e1;
+        }
+
         .phone-number {
             font-size: 17px;
             color: #333;
             font-weight: 500;
             letter-spacing: 0.5px;
+            overflow-wrap: anywhere;
         }
 
         .actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            align-items: center;
         }
 
         .icon-btn {
@@ -85,7 +104,10 @@
             height: 40px;
             border-radius: 50%;
             text-decoration: none;
+            border: none;
+            cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .icon-btn:hover {
@@ -93,12 +115,34 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .whatsapp {
-            background: #25D366;
+        .icon-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
-        .call {
-            background: #007AFF;
+        .whatsapp { background: #25D366; }
+        .call { background: #007AFF; }
+        .stop {
+            background: #d9534f;
+            display: none;
+            position: relative;
+        }
+        .stop.on { display: inline-flex; }
+        .stop::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid #d9534f;
+            opacity: 0.6;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            70% { transform: scale(1.25); opacity: 0; }
+            100% { transform: scale(1.25); opacity: 0; }
         }
 
         .icon-btn svg {
@@ -106,11 +150,55 @@
             height: 22px;
             fill: #fff;
         }
+
+        .transcript-col {
+            min-height: 40px;
+            font-size: 13px;
+            color: #333;
+            background: #f3f5f9;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e1e7ef;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+        }
+
+        .transcript-col.empty {
+            color: #aaa;
+            font-style: italic;
+            background: transparent;
+            border-style: dashed;
+        }
+
+        .transcript-col.live {
+            background: #fff8e1;
+            border-color: #f0ad4e;
+            color: #5b3c00;
+        }
+
+        .transcript-col .timer {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #d9534f;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 20px 16px; }
+            .contact-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .actions { justify-content: flex-end; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Contact List</h1>
+        <div id="banner" class="banner"></div>
         <ul class="contact-list" id="contact-list"></ul>
         <div class="status" id="status">Loading...</div>
     </div>
@@ -118,6 +206,7 @@
     <script>
         const WA_SVG = '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
         const CALL_SVG = '<svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>';
+        const STOP_SVG = '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, (c) => ({
@@ -129,23 +218,279 @@
             return number.startsWith('880') ? '0' + number.slice(3) : number;
         }
 
-        function renderRow(c) {
+        function renderRow(c, idx) {
             const phone = escapeHtml(localDisplay(c.number));
             const label = c.name ? `${phone} (${escapeHtml(c.name)})` : phone;
             const num = encodeURIComponent(c.number);
             const waBtn = c.hasWhatsApp
-                ? `<a href="https://wa.me/${num}" target="_blank" class="icon-btn whatsapp" title="WhatsApp Chat">${WA_SVG}</a>`
+                ? `<a href="https://wa.me/${num}" target="_blank" class="icon-btn whatsapp" title="WhatsApp Chat" data-action="wa" data-row="${idx}">${WA_SVG}</a>`
                 : '';
             return `
-                <li class="contact-item">
+                <li class="contact-item" data-row="${idx}">
                     <span class="phone-number">${label}</span>
                     <div class="actions">
                         ${waBtn}
-                        <a href="tel:${num}" class="icon-btn call" title="Call">${CALL_SVG}</a>
+                        <a href="tel:${num}" class="icon-btn call" title="Call" data-action="call" data-row="${idx}">${CALL_SVG}</a>
+                        <button type="button" class="icon-btn stop" title="Stop & save transcript" data-action="stop" data-row="${idx}" aria-label="Stop recording">${STOP_SVG}</button>
                     </div>
+                    <div class="transcript-col empty" data-row="${idx}">টেক্সট এখানে দেখাবে…</div>
                 </li>`;
         }
 
+        // ---------- Voice-to-text engine ----------
+        const LANG = "bn-BD";
+        const MAX_DURATION_MS = 600_000;
+        const PAUSE_COMMA_MS = 1500;
+        const PAUSE_NEWLINE_MS = 3000;
+
+        const bannerEl = document.getElementById('banner');
+        function showBanner(msg) {
+            bannerEl.textContent = msg;
+            bannerEl.classList.add('on');
+            clearTimeout(showBanner._t);
+            showBanner._t = setTimeout(() => bannerEl.classList.remove('on'), 4000);
+        }
+
+        const session = {
+            active: false,
+            rowIdx: -1,
+            recognition: null,
+            committedText: "",
+            sessionFinalText: "",
+            interimText: "",
+            lastUtteranceEndAt: 0,
+            startedAt: 0,
+            timerId: 0,
+            maxId: 0,
+            shouldRestart: false,
+            restartCount: 0,
+            lastRestartAt: 0,
+        };
+
+        function fmtTime(ms) {
+            const s = Math.floor(ms / 1000);
+            const m = Math.floor(s / 60);
+            const r = s % 60;
+            return `${m}:${String(r).padStart(2, "0")}`;
+        }
+
+        function computeSeparator(gapMs) {
+            if (session.committedText === "") return "";
+            if (gapMs >= PAUSE_NEWLINE_MS) return "।\n";
+            if (gapMs >= PAUSE_COMMA_MS) return ", ";
+            return " ";
+        }
+
+        function getRowEls(idx) {
+            return {
+                item: document.querySelector(`.contact-item[data-row="${idx}"]`),
+                transcript: document.querySelector(`.transcript-col[data-row="${idx}"]`),
+                stopBtn: document.querySelector(`.stop[data-row="${idx}"]`),
+                waBtn: document.querySelector(`.whatsapp[data-row="${idx}"]`),
+                callBtn: document.querySelector(`.call[data-row="${idx}"]`),
+            };
+        }
+
+        function updateLiveDisplay() {
+            const { transcript } = getRowEls(session.rowIdx);
+            if (!transcript) return;
+            const previewSep = session.committedText && session.sessionFinalText ? " " : "";
+            const combined = (session.committedText + previewSep + session.sessionFinalText + " " + session.interimText).trim();
+            const elapsed = performance.now() - session.startedAt;
+            transcript.classList.remove('empty');
+            transcript.classList.add('live');
+            transcript.innerHTML = `<span class="timer">● ${fmtTime(elapsed)}</span>${escapeHtml(combined || "শুনছি…")}`;
+        }
+
+        function buildRecognition() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) return null;
+            const rec = new SR();
+            rec.lang = LANG;
+            rec.continuous = false;
+            rec.interimResults = true;
+            rec.maxAlternatives = 1;
+
+            rec.onresult = (e) => {
+                let sessionFinal = "";
+                let interim = "";
+                for (let i = 0; i < e.results.length; i++) {
+                    const t = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) sessionFinal += t;
+                    else interim += t;
+                }
+                session.sessionFinalText = sessionFinal.trim();
+                session.interimText = interim;
+                updateLiveDisplay();
+            };
+
+            rec.onerror = (e) => {
+                const code = e && e.error;
+                console.warn('[SR] error', code);
+                if (code === 'not-allowed' || code === 'service-not-allowed') {
+                    showBanner('Microphone permission denied.');
+                    session.shouldRestart = false;
+                    finishSession(true);
+                } else if (code && code !== 'no-speech' && code !== 'aborted' && code !== 'network' && code !== 'audio-capture') {
+                    showBanner('Recognition error: ' + code);
+                }
+            };
+
+            rec.onend = () => {
+                if (!session.active) return;
+                const now = performance.now();
+                if (session.sessionFinalText) {
+                    const gap = session.lastUtteranceEndAt ? now - session.lastUtteranceEndAt : 0;
+                    const sep = computeSeparator(gap);
+                    session.committedText = session.committedText.replace(/\s+$/, "") + sep + session.sessionFinalText;
+                    session.lastUtteranceEndAt = now;
+                }
+                session.sessionFinalText = "";
+                session.interimText = "";
+
+                if (!session.shouldRestart) {
+                    finishSession(false);
+                    return;
+                }
+
+                if (now - session.lastRestartAt < 300) session.restartCount++;
+                else session.restartCount = 0;
+                session.lastRestartAt = now;
+
+                if (session.restartCount > 8) {
+                    showBanner('রেকর্ডিং বন্ধ হয়ে গেছে। আবার চেষ্টা করুন।');
+                    session.shouldRestart = false;
+                    finishSession(false);
+                    return;
+                }
+
+                const next = buildRecognition();
+                if (!next) { finishSession(false); return; }
+                session.recognition = next;
+                try {
+                    next.start();
+                } catch (err) {
+                    setTimeout(() => {
+                        if (!session.active || !session.shouldRestart) return;
+                        try { next.start(); } catch (err2) {
+                            showBanner('রেকর্ডিং চালু রাখা গেল না।');
+                            session.shouldRestart = false;
+                            finishSession(false);
+                        }
+                    }, 200);
+                }
+            };
+            return rec;
+        }
+
+        function startSession(rowIdx) {
+            if (session.active) return;
+            const rec = buildRecognition();
+            if (!rec) {
+                showBanner('Web Speech API not supported. Use Chrome or Edge.');
+                return;
+            }
+            session.active = true;
+            session.rowIdx = rowIdx;
+            session.recognition = rec;
+            session.committedText = "";
+            session.sessionFinalText = "";
+            session.interimText = "";
+            session.lastUtteranceEndAt = 0;
+            session.startedAt = performance.now();
+            session.shouldRestart = true;
+            session.restartCount = 0;
+            session.lastRestartAt = 0;
+
+            const { item, stopBtn, transcript } = getRowEls(rowIdx);
+            if (item) item.classList.add('recording');
+            if (stopBtn) stopBtn.classList.add('on');
+            if (transcript) {
+                transcript.classList.remove('empty');
+                transcript.classList.add('live');
+                transcript.textContent = "শুনছি…";
+            }
+
+            try {
+                rec.start();
+            } catch (err) {
+                showBanner('Could not start: ' + (err && err.message ? err.message : ''));
+                finishSession(true);
+                return;
+            }
+
+            session.timerId = setInterval(updateLiveDisplay, 250);
+            session.maxId = setTimeout(() => stopSession(), MAX_DURATION_MS);
+        }
+
+        function stopSession() {
+            if (!session.active) return;
+            session.shouldRestart = false;
+            try { session.recognition && session.recognition.stop(); } catch (_) {}
+        }
+
+        function finishSession(cancelled) {
+            const idx = session.rowIdx;
+            clearInterval(session.timerId);
+            clearTimeout(session.maxId);
+
+            const finalText = session.committedText.trim();
+
+            session.active = false;
+            session.shouldRestart = false;
+            session.recognition = null;
+            session.committedText = "";
+            session.sessionFinalText = "";
+            session.interimText = "";
+
+            const { item, stopBtn, transcript } = getRowEls(idx);
+            if (item) item.classList.remove('recording');
+            if (stopBtn) stopBtn.classList.remove('on');
+            if (!transcript) return;
+
+            transcript.classList.remove('live');
+            if (cancelled || !finalText) {
+                transcript.classList.add('empty');
+                transcript.textContent = "টেক্সট এখানে দেখাবে…";
+            } else {
+                transcript.classList.remove('empty');
+                transcript.textContent = finalText;
+            }
+            session.rowIdx = -1;
+        }
+
+        // ---------- Click handling ----------
+        document.getElementById('contact-list').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const rowIdx = Number(btn.dataset.row);
+
+            if (action === 'wa' || action === 'call') {
+                // Allow the link to open (tel: / wa.me) — start recording in parallel.
+                if (session.active) {
+                    if (session.rowIdx === rowIdx) return; // already recording this row
+                    showBanner('আগের রেকর্ডিং চলছে। আগে Stop চাপুন।');
+                    e.preventDefault();
+                    return;
+                }
+                startSession(rowIdx);
+                return;
+            }
+
+            if (action === 'stop') {
+                e.preventDefault();
+                if (session.active && session.rowIdx === rowIdx) {
+                    stopSession();
+                }
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (session.active) stopSession();
+        });
+
+        // ---------- Load contacts ----------
         fetch('/api/contacts')
             .then((r) => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -153,7 +498,7 @@
             })
             .then((contacts) => {
                 document.getElementById('contact-list').innerHTML =
-                    contacts.map(renderRow).join('');
+                    contacts.map((c, i) => renderRow(c, i)).join('');
                 document.getElementById('status').remove();
             })
             .catch((err) => {
