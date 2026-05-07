@@ -1,0 +1,233 @@
+@{
+    ViewData["Title"] = "Developer Integration Guide";
+}
+
+<div class="page-header">
+    <h1>👨‍💻 Developer Integration Guide</h1>
+    <span class="muted">CRM-এ Detection Service integrate করার জন্য</span>
+</div>
+
+<div class="dev-toc">
+    <a href="#setup">1. Setup</a>
+    <a href="#security">2. Security</a>
+    <a href="#endpoints">3. Endpoints</a>
+    <a href="#csharp">4. C# Sample</a>
+    <a href="#errors">5. Errors</a>
+    <a href="#test">6. Quick Test</a>
+</div>
+
+<!-- 1. SETUP -->
+<div class="dev-section" id="setup">
+    <div class="dev-section-num">1</div>
+    <div class="dev-section-body">
+        <h2>Setup — `appsettings.json`</h2>
+        <p>DevOps থেকে নিন: <strong>Base URL</strong> + <strong>API Key</strong>। তারপর CRM-এর config-এ যোগ করুন:</p>
+        <pre><code>{
+  "Detection": {
+    "BaseUrl": "https://detection.example.com",
+    "ApiKey": "vP9V3lM7OlwcgQV4u7yBs6Ntu05amKDlYdWmoE7aDp4"
+  }
+}</code></pre>
+        <p class="muted small">⚠️ API key git-এ commit করবেন না। `web.config` transform বা environment variable use করুন।</p>
+    </div>
+</div>
+
+<!-- 2. SECURITY -->
+<div class="dev-section" id="security">
+    <div class="dev-section-num">2</div>
+    <div class="dev-section-body">
+        <h2>Security — Bearer Token</h2>
+        <p>সব request-এ এই header পাঠান:</p>
+        <pre><code>Authorization: Bearer &lt;your-api-key&gt;</code></pre>
+        <table class="dev-table">
+            <tr><td>API key authentication</td><td>Bcrypt-hashed in server DB. Plaintext key never stored.</td></tr>
+            <tr><td>Per-key daily quota</td><td>Default 100,000 requests/day (configurable per branch)</td></tr>
+            <tr><td>Per-key rate limit</td><td>600 req/min, 20 req/sec burst</td></tr>
+            <tr><td>Rate exceed response</td><td>HTTP 429 with `Retry-After` header (seconds)</td></tr>
+            <tr><td>Key rotation</td><td>DevOps `npm run create-api-key` → new plaintext printed once → update `appsettings.json` → delete old</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- 3. ENDPOINTS -->
+<div class="dev-section" id="endpoints">
+    <div class="dev-section-num">3</div>
+    <div class="dev-section-body">
+        <h2>API Endpoints (যা ব্যবহার করবেন)</h2>
+
+        <div class="dev-endpoint">
+            <div class="dev-endpoint-head">
+                <span class="dev-method post">POST</span>
+                <code>/api/check</code>
+                <span class="dev-purpose">— একটি number lookup</span>
+            </div>
+            <div class="dev-endpoint-body">
+                <strong>Body:</strong>
+                <pre><code>{ "number": "8801712345678" }</code></pre>
+                <strong>Response:</strong>
+                <pre><code>{
+  "number": "8801712345678",
+  "hasWhatsApp": true,
+  "hasTelegram": false,
+  "whatsappCheckedAt": "2026-05-07T10:30:00Z",
+  "telegramCheckedAt": null,
+  "status": "cached"
+}</code></pre>
+                <p class="muted small">Cache থেকে ফেরে — instant। `null` মানে এখনো check হয়নি।</p>
+            </div>
+        </div>
+
+        <div class="dev-endpoint">
+            <div class="dev-endpoint-head">
+                <span class="dev-method post">POST</span>
+                <code>/api/batch</code>
+                <span class="dev-purpose">— একসাথে ১-১০০টি numbers (Recommended)</span>
+            </div>
+            <div class="dev-endpoint-body">
+                <strong>Body:</strong>
+                <pre><code>{ "numbers": ["8801712345678", "8801823456789"] }</code></pre>
+                <strong>Response:</strong>
+                <pre><code>{
+  "results": [ { "number": "...", "hasWhatsApp": true, ... }, ... ],
+  "queued": 2
+}</code></pre>
+                <p class="muted small">List view-এ এক page-এর সব numbers এক call-এ check। Always prefer over multiple `/api/check`.</p>
+            </div>
+        </div>
+
+        <div class="dev-endpoint">
+            <div class="dev-endpoint-head">
+                <span class="dev-method post">POST</span>
+                <code>/api/queue</code>
+                <span class="dev-purpose">— Pre-add numbers without waiting</span>
+            </div>
+            <div class="dev-endpoint-body">
+                <strong>Body:</strong>
+                <pre><code>{ "numbers": ["8801..."], "priority": "normal" }</code></pre>
+                <p class="muted small">Background-এ detection হবে, পরবর্তী cache read-এ result পাবেন।</p>
+            </div>
+        </div>
+
+        <div class="dev-endpoint">
+            <div class="dev-endpoint-head">
+                <span class="dev-method post">POST</span>
+                <code>/api/check-now</code>
+                <span class="dev-purpose">— Live detection (slow, real-time)</span>
+            </div>
+            <div class="dev-endpoint-body">
+                <strong>Body:</strong>
+                <pre><code>{
+  "numbers": ["8801..."],
+  "platform": "whatsapp"   // or "telegram"
+}</code></pre>
+                <p class="muted small">⏱️ Live API call — Telegram ~১s/batch (১০০ numbers), WhatsApp ~৩-৫s/number। Use only when freshness critical।</p>
+            </div>
+        </div>
+
+        <div class="dev-endpoint">
+            <div class="dev-endpoint-head">
+                <span class="dev-method get">GET</span>
+                <code>/health</code>
+                <span class="dev-purpose">— Service alive check (no auth)</span>
+            </div>
+            <div class="dev-endpoint-body">
+                <pre><code>{ "ok": true, "uptime": 12345, "version": "1.0.0" }</code></pre>
+            </div>
+        </div>
+
+        <p class="muted small">⚠️ Number format: international (E.164) without `+` → e.g. `8801712345678`। Service auto-normalizes BD numbers (e.g. `01712345678` → `8801712345678`)।</p>
+    </div>
+</div>
+
+<!-- 4. C# SAMPLE -->
+<div class="dev-section" id="csharp">
+    <div class="dev-section-num">4</div>
+    <div class="dev-section-body">
+        <h2>C# Sample (.NET Framework / Core)</h2>
+        <p>Minimal HttpClient wrapper — copy-paste আপনার CRM-এ:</p>
+        <pre><code class="lang-csharp">public class DetectionClient
+{
+    private static readonly HttpClient _http = new HttpClient {
+        BaseAddress = new Uri(ConfigurationManager.AppSettings["Detection.BaseUrl"]),
+        Timeout = TimeSpan.FromMinutes(5)   // for /check-now real detection
+    };
+    private readonly string _apiKey =
+        ConfigurationManager.AppSettings["Detection.ApiKey"];
+
+    public async Task&lt;List&lt;DetectionResult&gt;&gt; CheckBatchAsync(IEnumerable&lt;string&gt; numbers)
+    {
+        var json = JsonConvert.SerializeObject(new { numbers = numbers.ToList() });
+        using (var req = new HttpRequestMessage(HttpMethod.Post, "/api/batch"))
+        {
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            var res = await _http.SendAsync(req);
+            if (!res.IsSuccessStatusCode) return new List&lt;DetectionResult&gt;();
+            var body = JsonConvert.DeserializeObject&lt;BatchResponse&gt;(
+                await res.Content.ReadAsStringAsync());
+            return body?.Results ?? new List&lt;DetectionResult&gt;();
+        }
+    }
+}
+
+public class DetectionResult
+{
+    [JsonProperty("number")]            public string Number { get; set; }
+    [JsonProperty("hasWhatsApp")]       public bool? HasWhatsApp { get; set; }
+    [JsonProperty("hasTelegram")]       public bool? HasTelegram { get; set; }
+    [JsonProperty("status")]            public string Status { get; set; }
+}
+public class BatchResponse {
+    [JsonProperty("results")] public List&lt;DetectionResult&gt; Results { get; set; }
+}</code></pre>
+        <p class="muted small">Razor view-এ: <code>@@if (result.HasWhatsApp == true) &#123; &lt;a href="https://wa.me/@@number"&gt;WhatsApp&lt;/a&gt; &#125;</code></p>
+    </div>
+</div>
+
+<!-- 5. ERRORS -->
+<div class="dev-section" id="errors">
+    <div class="dev-section-num">5</div>
+    <div class="dev-section-body">
+        <h2>Errors & Status Codes</h2>
+        <table class="dev-table">
+            <thead>
+                <tr><th>Status</th><th>মানে</th><th>কী করবেন</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>200</code></td><td>OK</td><td>Process response</td></tr>
+                <tr><td><code>400</code></td><td>Invalid number/body</td><td>Number normalize করুন (E.164)</td></tr>
+                <tr><td><code>401</code></td><td>API key missing/wrong</td><td>Header check, key rotate করুন</td></tr>
+                <tr><td><code>429</code></td><td>Rate limit hit</td><td>Response-এর `Retry-After` header (sec) wait করে retry</td></tr>
+                <tr><td><code>503</code></td><td>No detection account connected</td><td>Settings page-এ WhatsApp/Telegram connect করুন</td></tr>
+                <tr><td><code>500/502</code></td><td>Server error</td><td>Try-catch + UI fallback (শুধু Call button)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 6. QUICK TEST -->
+<div class="dev-section" id="test">
+    <div class="dev-section-num">6</div>
+    <div class="dev-section-body">
+        <h2>Quick Test (curl / Postman)</h2>
+        <pre><code># Health check (no auth)
+curl https://detection.example.com/health
+
+# Single number check (with auth)
+curl -X POST https://detection.example.com/api/check \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"number":"8801712345678"}'
+
+# Batch (50 numbers)
+curl -X POST https://detection.example.com/api/batch \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"numbers":["8801712345678","8801823456789"]}'</code></pre>
+    </div>
+</div>
+
+<div class="dev-tldr">
+    <strong>TL;DR — ১ লাইনে:</strong>
+    <code>POST /api/batch</code> দিয়ে list view-এর সব numbers এক call-এ check করুন। Response-এর <code>hasWhatsApp</code>/<code>hasTelegram</code> boolean অনুযায়ী conditional button render করুন। Service down হলে শুধু Call button fallback।
+</div>

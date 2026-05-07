@@ -5,3 +5,18 @@ package-lock.json
 .env
 .env.local
 .session
+
+# .NET build output
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
