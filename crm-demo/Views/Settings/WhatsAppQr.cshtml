@@ -1,0 +1,95 @@
+@model AccountSummary
+@{
+    ViewData["Title"] = "Connect WhatsApp";
+    var accountId = (string)ViewBag.AccountId;
+}
+
+<div class="page-header">
+    <h1>📞 Connect WhatsApp — @accountId</h1>
+    <a href="@Url.Action("Index", "Settings")" class="link-clear">← Back to Settings</a>
+</div>
+
+<div class="qr-card">
+    <div class="qr-instructions">
+        <ol>
+            <li>আপনার phone-এ <strong>WhatsApp</strong> খুলুন</li>
+            <li>Settings (⋮) → <strong>Linked Devices</strong> → <strong>Link a Device</strong></li>
+            <li>নিচের QR code-এ phone camera ধরুন</li>
+            <li>Connection ready হলে এই page automatic refresh হয়ে Settings-এ ফিরে যাবে</li>
+        </ol>
+    </div>
+
+    <div id="qr-container" class="qr-container">
+        @if (Model?.State == "awaiting_qr" && !string.IsNullOrEmpty(Model.Qr))
+        {
+            <canvas id="qrcode"></canvas>
+            <p class="qr-state muted">State: <strong>@Model.State</strong></p>
+        }
+        else if (Model?.State == "ready")
+        {
+            <div class="qr-success">
+                <h2>✅ Connected!</h2>
+                <p>WhatsApp account <strong>@accountId</strong> is now active.</p>
+            </div>
+        }
+        else
+        {
+            <p class="muted">Initializing... <span id="dots">•</span></p>
+            <p class="qr-state muted">State: <strong>@(Model?.State ?? "starting")</strong></p>
+        }
+    </div>
+
+    <div id="qr-error" class="flash flash-err" style="display:none;"></div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+    const accountId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(accountId));
+    let initialQr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.Qr));
+    let lastQr = null;
+    const errBox = document.getElementById('qr-error');
+
+    function renderQr(text) {
+        const canvas = document.getElementById('qrcode');
+        if (!canvas) return;
+        QRCode.toCanvas(canvas, text, { width: 280, margin: 2 }, (err) => {
+            if (err) { errBox.textContent = 'QR render failed: ' + err.message; errBox.style.display = 'block'; }
+        });
+    }
+
+    function poll() {
+        fetch('/Settings/WhatsAppStatusJson?id=' + encodeURIComponent(accountId))
+            .then(r => r.json())
+            .then(s => {
+                if (!s) return;
+                document.querySelector('.qr-state strong')?.textContent !== s.state &&
+                    (document.querySelector('.qr-state').innerHTML = 'State: <strong>' + s.state + '</strong>');
+                if (s.state === 'ready') {
+                    document.getElementById('qr-container').innerHTML =
+                        '<div class="qr-success"><h2>✅ Connected!</h2><p>WhatsApp account <strong>' + accountId + '</strong> is now active. Redirecting...</p></div>';
+                    setTimeout(() => { window.location.href = '/Settings'; }, 1500);
+                    return;
+                }
+                if (s.state === 'awaiting_qr' && s.qr && s.qr !== lastQr) {
+                    lastQr = s.qr;
+                    let canvas = document.getElementById('qrcode');
+                    if (!canvas) {
+                        const c = document.getElementById('qr-container');
+                        c.innerHTML = '<canvas id="qrcode"></canvas><p class="qr-state muted">State: <strong>awaiting_qr</strong></p>';
+                    }
+                    renderQr(s.qr);
+                }
+                if (s.state === 'error') {
+                    errBox.textContent = 'Error: ' + (s.error || 'unknown');
+                    errBox.style.display = 'block';
+                }
+            })
+            .catch(e => { /* network blip ignore */ });
+    }
+
+    if (initialQr) renderQr(initialQr);
+    setInterval(poll, 2000);
+    poll();
+</script>
+}

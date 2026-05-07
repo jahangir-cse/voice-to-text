@@ -92,6 +92,81 @@ public class DetectionClient
         }
     }
 
+    public async Task<AccountListResponse> GetAccountsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var res = await _http.GetAsync("/api/accounts", ct);
+            if (!res.IsSuccessStatusCode) return new AccountListResponse();
+            return await res.Content.ReadFromJsonAsync<AccountListResponse>(cancellationToken: ct) ?? new AccountListResponse();
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "GetAccounts failed");
+            return new AccountListResponse();
+        }
+    }
+
+    public async Task<AccountSummary?> WhatsAppConnectAsync(string id, CancellationToken ct = default)
+    {
+        var res = await _http.PostAsJsonAsync($"/api/accounts/{id}/whatsapp/connect", new { }, ct);
+        if (!res.IsSuccessStatusCode) return null;
+        return await res.Content.ReadFromJsonAsync<AccountSummary>(cancellationToken: ct);
+    }
+
+    public async Task<AccountSummary?> WhatsAppStatusAsync(string id, CancellationToken ct = default)
+    {
+        var res = await _http.GetAsync($"/api/accounts/{id}/whatsapp/status", ct);
+        if (!res.IsSuccessStatusCode) return null;
+        return await res.Content.ReadFromJsonAsync<AccountSummary>(cancellationToken: ct);
+    }
+
+    public async Task<AccountSummary?> TelegramConnectAsync(string id, string phone, CancellationToken ct = default)
+    {
+        var res = await _http.PostAsJsonAsync($"/api/accounts/{id}/telegram/connect", new { phone }, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            var body = await res.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException($"Telegram connect failed: {res.StatusCode} {body}");
+        }
+        return await res.Content.ReadFromJsonAsync<AccountSummary>(cancellationToken: ct);
+    }
+
+    public async Task<TelegramVerifyResponse?> TelegramVerifyAsync(string id, string code, string? password = null, CancellationToken ct = default)
+    {
+        var payload = string.IsNullOrEmpty(password) ? (object)new { code } : new { code, password };
+        var res = await _http.PostAsJsonAsync($"/api/accounts/{id}/telegram/verify", payload, ct);
+        return await res.Content.ReadFromJsonAsync<TelegramVerifyResponse>(cancellationToken: ct);
+    }
+
+    public async Task<AccountSummary?> DisconnectAsync(string id, CancellationToken ct = default)
+    {
+        var res = await _http.PostAsJsonAsync($"/api/accounts/{id}/disconnect", new { }, ct);
+        if (!res.IsSuccessStatusCode) return null;
+        return await res.Content.ReadFromJsonAsync<AccountSummary>(cancellationToken: ct);
+    }
+
+    public async Task<CheckNowResponse?> CheckNowAsync(IEnumerable<string> numbers, string platform, CancellationToken ct = default)
+    {
+        var list = numbers.ToList();
+        if (list.Count == 0) return new CheckNowResponse { Ok = false, Error = "No numbers" };
+        try
+        {
+            var res = await _http.PostAsJsonAsync("/api/check-now", new { numbers = list, platform }, ct);
+            var body = await res.Content.ReadFromJsonAsync<CheckNowResponse>(cancellationToken: ct);
+            if (!res.IsSuccessStatusCode && body == null)
+            {
+                return new CheckNowResponse { Ok = false, Error = $"HTTP {(int)res.StatusCode}" };
+            }
+            return body;
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "CheckNow error");
+            return new CheckNowResponse { Ok = false, Error = ex.Message };
+        }
+    }
+
     public async Task<bool> IsHealthyAsync(CancellationToken ct = default)
     {
         try

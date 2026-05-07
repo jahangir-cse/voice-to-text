@@ -8,9 +8,14 @@ const { setErrorHandler } = require('./middleware/error');
 const { registerCheckRoutes } = require('./routes/check');
 const { registerHealthRoutes } = require('./routes/health');
 const { registerAdminRoutes } = require('./routes/admin');
+const { registerAccountRoutes } = require('./routes/accounts');
+const { ConnectionManager } = require('./workers/connection-manager');
 
 async function buildApp() {
     runMigrations();
+
+    const manager = new ConnectionManager();
+    await manager.start();
 
     const app = Fastify({
         loggerInstance: logger,
@@ -25,14 +30,15 @@ async function buildApp() {
     setErrorHandler(app);
 
     await registerHealthRoutes(app);
-    await registerCheckRoutes(app);
+    await registerCheckRoutes(app, manager);
+    await registerAccountRoutes(app, manager);
     await registerAdminRoutes(app);
 
-    return app;
+    return { app, manager };
 }
 
 async function main() {
-    const app = await buildApp();
+    const { app, manager } = await buildApp();
     try {
         await app.listen({ host: '0.0.0.0', port: config.port });
         logger.info({ port: config.port }, 'detection-service API running');

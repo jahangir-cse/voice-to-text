@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Verify Telegram OTP";
+    var accountId = (string)ViewBag.AccountId;
+    var pending = ViewBag.Pending as AccountSummary;
+    var flashMsg = TempData["FlashMessage"] as string;
+    var flashKind = TempData["FlashKind"] as string;
+    var awaiting2fa = pending?.State == "awaiting_2fa";
+}
+
+<div class="page-header">
+    <h1>✈️ Verify Telegram — @accountId</h1>
+    <a href="@Url.Action("Index", "Settings")" class="link-clear">← Cancel</a>
+</div>
+
+@if (!string.IsNullOrEmpty(flashMsg))
+{
+    var cls = flashKind == "ok" ? "flash-wa" : flashKind == "err" ? "flash-err" : "flash-info";
+    <div class="flash @cls">@flashMsg</div>
+}
+
+<div class="qr-card">
+    <div class="qr-instructions">
+        @if (awaiting2fa)
+        {
+            <p><strong>2FA enabled</strong> — phone code accepted, এখন আপনার Telegram cloud password দিন।</p>
+        }
+        else
+        {
+            <p>আপনার phone-এ Telegram app খুলুন। কয়েক সেকেন্ডের মধ্যে <strong>Telegram</strong> থেকে একটা login code আসবে। সেই ৫-ডিজিট code নিচে enter করুন।</p>
+            <p class="muted">যদি code না আসে, কয়েক মিনিট অপেক্ষা করুন বা Telegram app-এর "Telegram" official chat দেখুন।</p>
+            @if (pending?.PendingPhone != null)
+            {
+                <p>Code পাঠানো হয়েছে: <strong>@pending.PendingPhone</strong></p>
+            }
+        }
+    </div>
+
+    <form method="post" asp-action="TelegramSubmitCode" class="otp-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@accountId" />
+        @if (awaiting2fa)
+        {
+            <input type="hidden" name="code" value="" />
+            <label>2FA Password</label>
+            <input type="password" name="password" placeholder="Cloud password" autofocus required class="otp-input" />
+        }
+        else
+        {
+            <label>Login Code</label>
+            <input type="text" name="code" placeholder="5-digit code" autofocus required pattern="[0-9]+" inputmode="numeric" maxlength="6" class="otp-input" />
+        }
+        <button type="submit" class="action-btn action-tg">@(awaiting2fa ? "Submit Password" : "Verify Code")</button>
+    </form>
+</div>

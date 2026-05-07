@@ -1,0 +1,109 @@
+@model AccountListResponse
+@{
+    ViewData["Title"] = "Settings — Accounts";
+    var flashMsg = TempData["FlashMessage"] as string;
+    var flashKind = TempData["FlashKind"] as string;
+
+    string StateBadge(string state) => state switch
+    {
+        "ready" => "<span class=\"badge badge-ok\">● ready</span>",
+        "connecting" or "awaiting_qr" or "awaiting_otp" or "awaiting_2fa"
+            => $"<span class=\"badge badge-pending\">⌛ {state.Replace('_', ' ')}</span>",
+        "error" => "<span class=\"badge badge-err\">● error</span>",
+        _ => $"<span class=\"badge badge-muted\">○ {state}</span>",
+    };
+}
+
+<div class="page-header">
+    <h1>⚙️ Account Settings</h1>
+    <a href="/" class="link-clear">← Back to Contacts</a>
+</div>
+
+@if (!string.IsNullOrEmpty(flashMsg))
+{
+    var cls = flashKind == "ok" ? "flash-wa" : flashKind == "err" ? "flash-err" : "flash-info";
+    <div class="flash @cls">@flashMsg</div>
+}
+
+<div class="settings-section">
+    <h2>📞 WhatsApp Accounts</h2>
+    <p class="muted">Connect a WhatsApp account by scanning a QR code with your phone (WhatsApp → Linked Devices → Link a Device).</p>
+    <table class="contact-table">
+        <thead>
+            <tr><th>ID</th><th>Status</th><th>Today checks</th><th>Error</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var acc in Model.WhatsApp)
+            {
+                <tr>
+                    <td><strong>@acc.Id</strong></td>
+                    <td>@Html.Raw(StateBadge(acc.State))</td>
+                    <td>@acc.TodayCount</td>
+                    <td class="muted small">@(acc.Error ?? "—")</td>
+                    <td class="actions">
+                        @if (acc.State == "ready")
+                        {
+                            <form method="post" asp-action="Disconnect" class="inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@acc.Id" />
+                                <button type="submit" class="action-btn action-reset">Disconnect</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form method="post" asp-action="WhatsAppConnect" class="inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@acc.Id" />
+                                <button type="submit" class="action-btn action-wa">Connect</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="settings-section">
+    <h2>✈️ Telegram Accounts</h2>
+    <p class="muted">Connect a Telegram account by submitting your phone number; you'll receive a code in Telegram (or SMS) to enter.</p>
+    <table class="contact-table">
+        <thead>
+            <tr><th>ID</th><th>Status</th><th>Today checks</th><th>Pending phone</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var acc in Model.Telegram)
+            {
+                <tr>
+                    <td><strong>@acc.Id</strong></td>
+                    <td>@Html.Raw(StateBadge(acc.State))</td>
+                    <td>@acc.TodayCount</td>
+                    <td class="muted small">@(acc.PendingPhone ?? "—")</td>
+                    <td class="actions">
+                        @if (acc.State == "ready")
+                        {
+                            <form method="post" asp-action="Disconnect" class="inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@acc.Id" />
+                                <button type="submit" class="action-btn action-reset">Disconnect</button>
+                            </form>
+                        }
+                        else if (acc.State == "awaiting_otp" || acc.State == "awaiting_2fa")
+                        {
+                            <a href="@Url.Action("TelegramVerify", new { id = acc.Id })" class="action-btn action-tg">Enter code</a>
+                        }
+                        else
+                        {
+                            <form method="post" asp-action="TelegramConnect" class="inline-form telegram-connect-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@acc.Id" />
+                                <input type="text" name="phone" placeholder="+8801XXXXXXXXX" required class="phone-input" />
+                                <button type="submit" class="action-btn action-tg">Send code</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

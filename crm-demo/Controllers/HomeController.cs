@@ -19,11 +19,17 @@ public class HomeController : Controller
     {
         var (rows, total) = await BuildPageAsync(page, pageSize, q, ct);
 
+        var accounts = await _detection.GetAccountsAsync(ct);
+        var waReady = accounts.WhatsApp.Any(a => a.State == "ready");
+        var tgReady = accounts.Telegram.Any(a => a.State == "ready");
+
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
         ViewBag.Total = total;
         ViewBag.Query = q ?? "";
         ViewBag.DetectionHealthy = await _detection.IsHealthyAsync(ct);
+        ViewBag.WaReady = waReady;
+        ViewBag.TgReady = tgReady;
 
         return View(rows);
     }
@@ -33,16 +39,24 @@ public class HomeController : Controller
     public async Task<IActionResult> CheckWhatsApp(int page = 1, int pageSize = 25, string? q = null, CancellationToken ct = default)
     {
         var pageNumbers = GetPageNumbers(page, pageSize, q);
-        var checkedCount = 0;
-        var matchedCount = 0;
-        if (pageNumbers.Count > 0)
+        if (pageNumbers.Count == 0)
         {
-            var results = await _detection.SimulateAsync(pageNumbers, "whatsapp", ct);
-            checkedCount = results.Count;
-            matchedCount = results.Count(r => r.HasWhatsApp == true);
+            TempData["FlashMessage"] = "No contacts to check on this page.";
+            TempData["FlashKind"] = "info";
+            return RedirectToAction(nameof(Index), new { page, pageSize, q });
         }
-        TempData["FlashMessage"] = $"WhatsApp check: scanned {checkedCount}, matched {matchedCount}";
-        TempData["FlashKind"] = "wa";
+
+        var result = await _detection.CheckNowAsync(pageNumbers, "whatsapp", ct);
+        if (result == null || !result.Ok)
+        {
+            TempData["FlashMessage"] = "WhatsApp check failed: " + (result?.Error ?? "no response");
+            TempData["FlashKind"] = "err";
+        }
+        else
+        {
+            TempData["FlashMessage"] = $"✅ Real WhatsApp check via {result.AccountId}: scanned {result.Scanned}, matched {result.Matched}.";
+            TempData["FlashKind"] = "wa";
+        }
         return RedirectToAction(nameof(Index), new { page, pageSize, q });
     }
 
@@ -51,16 +65,24 @@ public class HomeController : Controller
     public async Task<IActionResult> CheckTelegram(int page = 1, int pageSize = 25, string? q = null, CancellationToken ct = default)
     {
         var pageNumbers = GetPageNumbers(page, pageSize, q);
-        var checkedCount = 0;
-        var matchedCount = 0;
-        if (pageNumbers.Count > 0)
+        if (pageNumbers.Count == 0)
         {
-            var results = await _detection.SimulateAsync(pageNumbers, "telegram", ct);
-            checkedCount = results.Count;
-            matchedCount = results.Count(r => r.HasTelegram == true);
+            TempData["FlashMessage"] = "No contacts to check on this page.";
+            TempData["FlashKind"] = "info";
+            return RedirectToAction(nameof(Index), new { page, pageSize, q });
         }
-        TempData["FlashMessage"] = $"Telegram check: scanned {checkedCount}, matched {matchedCount}";
-        TempData["FlashKind"] = "tg";
+
+        var result = await _detection.CheckNowAsync(pageNumbers, "telegram", ct);
+        if (result == null || !result.Ok)
+        {
+            TempData["FlashMessage"] = "Telegram check failed: " + (result?.Error ?? "no response");
+            TempData["FlashKind"] = "err";
+        }
+        else
+        {
+            TempData["FlashMessage"] = $"✅ Real Telegram check via {result.AccountId}: scanned {result.Scanned}, matched {result.Matched}.";
+            TempData["FlashKind"] = "tg";
+        }
         return RedirectToAction(nameof(Index), new { page, pageSize, q });
     }
 

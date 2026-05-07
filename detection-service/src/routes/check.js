@@ -30,7 +30,7 @@ function rowToResponse(row, number) {
     };
 }
 
-async function registerCheckRoutes(app) {
+async function registerCheckRoutes(app, manager) {
     app.post('/api/check', {
         preHandler: [authenticate, rateLimit],
         schema: {
@@ -113,6 +113,79 @@ async function registerCheckRoutes(app) {
             if (numbers.length === 0) return reply.code(400).send({ error: 'No valid numbers' });
             const queued = insertOrIgnoreMany(numbers, req.apiKey.branch);
             return { received: numbers.length, queued, alreadyKnown: numbers.length - queued };
+        },
+    });
+
+    // Real synchronous detection via in-process pool.
+    // Performs live check against WhatsApp/Telegram via connected accounts and writes
+    // results back to the SQLite cache before responding.
+    app.post('/api/check-now', {
+        preHandler: [authenticate, rateLimit],
+        config: {
+            rateCost: (req) =>
+                Math.max(1, Math.ceil((req.body && Array.isArray(req.body.numbers) ? req.body.numbers.length : 1) / 5)),
+        },
+        schema: {
+            body: {
+                type: 'object',
+                required: ['numbers', 'platform'],
+                properties: {
+                    numbers: {
+                        type: 'array',
+                        minItems: 1,
+                        maxItems: 100,
+                        items: { type: 'string', minLength: 8, maxLength: 20 },
+                    },
+                    platform: { type: 'string', enum: ['whatsapp', 'telegram'] },
+                },
+            },
+        },
+        handler: async (req, reply) => {
+            if (!manager) return reply.code(503).send({ error: 'Detection pool not initialized' });
+
+            const numbers = normalizeMany(req.body.numbers);
+            if (numbers.length === 0) return reply.code(400).send({ error: 'No valid numbers' });
+            const platform = req.body.platform;
+
+            insertOrIgnoreMany(numbers, req.apiKey.branch);
+
+            if (platform === 'telegram') {
+                const acc = manager.pickHealthyTelegram();
+                if (!acc) return reply.code(503).send({ error: 'No connected Telegram account. Connect one in Settings.' });
+                try {
+                    const results = await acc.checkBatch(numbers);
+                    const ts = Math.floor(Date.now() / 1000);
+                    const tx = db.transaction(() => {
+                        for (const r of results) {
+                            stmts.updateTelegram.run(r.hasTelegram ? 1 : 0, ts, r.number);
+                        }
+                    });
+                    tx();
+                    const matched = results.filter((r) => r.hasTelegram).length;
+                    return { ok: true, platform, scanned: results.length, matched, accountId: acc.id };
+                } catch (err) {
+                    return reply.code(502).send({ error: err.message || 'Telegram check failed' });
+                }
+            }
+
+            // platform === 'whatsapp'
+            const acc = manager.pickHealthyWhatsApp();
+            if (!acc) return reply.code(503).send({ error: 'No connected WhatsApp account. Connect one in Settings.' });
+            const ts = Math.floor(Date.now() / 1000);
+            let matched = 0;
+            const errors = [];
+            for (const n of numbers) {
+                try {
+                    const has = await acc.checkOne(n);
+                    stmts.updateWhatsApp.run(has ? 1 : 0, ts, n);
+                    if (has) matched++;
+                } catch (err) {
+                    errors.push({ number: n, error: err.message });
+                }
+                // small jitter to be polite to anti-abuse signals
+                await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
+            }
+            return { ok: true, platform, scanned: numbers.length, matched, errors, accountId: acc.id };
         },
     });
 
