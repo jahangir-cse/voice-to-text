@@ -24,7 +24,9 @@ public class DetectionClient
         _opts = config.GetSection("Detection").Get<DetectionOptions>() ?? new DetectionOptions();
         _http.BaseAddress = new Uri(_opts.BaseUrl);
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _opts.ApiKey);
-        _http.Timeout = TimeSpan.FromSeconds(10);
+        // Long timeout because /api/check-now performs live detection
+        // (per WhatsApp number ~3-5s rate-limited; 25 numbers ≈ 2 minutes).
+        _http.Timeout = TimeSpan.FromMinutes(5);
     }
 
     public async Task<DetectionResult?> CheckAsync(string number, CancellationToken ct = default)

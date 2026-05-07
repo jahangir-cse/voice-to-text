@@ -174,17 +174,23 @@ async function registerCheckRoutes(app, manager) {
             const ts = Math.floor(Date.now() / 1000);
             let matched = 0;
             const errors = [];
-            for (const n of numbers) {
+            req.log.info({ id: acc.id, total: numbers.length }, 'WhatsApp check-now start');
+            for (let i = 0; i < numbers.length; i++) {
+                const n = numbers[i];
                 try {
                     const has = await acc.checkOne(n);
                     stmts.updateWhatsApp.run(has ? 1 : 0, ts, n);
                     if (has) matched++;
+                    req.log.info({ id: acc.id, idx: i + 1, total: numbers.length, number: n, has }, 'WhatsApp checked');
                 } catch (err) {
                     errors.push({ number: n, error: err.message });
+                    req.log.warn({ id: acc.id, number: n, err: err.message }, 'WhatsApp check failed');
                 }
-                // small jitter to be polite to anti-abuse signals
-                await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
+                if (i < numbers.length - 1) {
+                    await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
+                }
             }
+            req.log.info({ id: acc.id, scanned: numbers.length, matched }, 'WhatsApp check-now done');
             return { ok: true, platform, scanned: numbers.length, matched, errors, accountId: acc.id };
         },
     });
