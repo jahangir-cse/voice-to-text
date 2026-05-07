@@ -1,0 +1,10 @@
+node_modules/
+data/
+sessions/
+.env
+.env.local
+*.log
+.DS_Store
+package-lock.json
+.wwebjs_auth/
+.wwebjs_cache/

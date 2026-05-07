@@ -1,0 +1,34 @@
+{
+  "name": "detection-service",
+  "version": "1.0.0",
+  "description": "Production microservice for WhatsApp/Telegram phone number detection. Multi-account pool, SQLite cache, REST API.",
+  "private": true,
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "pm2-runtime start ecosystem.config.js",
+    "dev": "node src/server.js",
+    "worker": "node src/workers/index.js",
+    "init-db": "node scripts/init-db.js",
+    "create-api-key": "node scripts/create-api-key.js",
+    "login-whatsapp": "node scripts/login-whatsapp.js",
+    "login-telegram": "node scripts/login-telegram.js"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/sensible": "^6.0.1",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.5.0",
+    "big-integer": "^1.6.52",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.1.0",
+    "input": "^1.0.1",
+    "pino": "^9.5.0",
+    "pm2": "^5.4.3",
+    "qrcode-terminal": "^0.12.0",
+    "telegram": "^2.26.16",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}

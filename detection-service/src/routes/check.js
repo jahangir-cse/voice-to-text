@@ -1,0 +1,178 @@
+const { config } = require('../config');
+const { stmts, insertOrIgnoreMany, db } = require('../db');
+const { normalize, normalizeMany } = require('../utils/normalize');
+const { authenticate, requireAdmin } = require('../middleware/auth');
+const { rateLimit } = require('../middleware/rate-limit');
+
+function rowToResponse(row, number) {
+    if (!row) {
+        return {
+            number,
+            hasWhatsApp: null,
+            hasTelegram: null,
+            whatsappCheckedAt: null,
+            telegramCheckedAt: null,
+            status: 'unknown',
+        };
+    }
+    const isCached = row.has_whatsapp !== null || row.has_telegram !== null;
+    return {
+        number: row.number,
+        hasWhatsApp: row.has_whatsapp === null ? null : !!row.has_whatsapp,
+        hasTelegram: row.has_telegram === null ? null : !!row.has_telegram,
+        whatsappCheckedAt: row.whatsapp_checked_at
+            ? new Date(row.whatsapp_checked_at * 1000).toISOString()
+            : null,
+        telegramCheckedAt: row.telegram_checked_at
+            ? new Date(row.telegram_checked_at * 1000).toISOString()
+            : null,
+        status: isCached ? 'cached' : 'unknown',
+    };
+}
+
+async function registerCheckRoutes(app) {
+    app.post('/api/check', {
+        preHandler: [authenticate, rateLimit],
+        schema: {
+            body: {
+                type: 'object',
+                required: ['number'],
+                properties: { number: { type: 'string', minLength: 8, maxLength: 20 } },
+            },
+        },
+        handler: async (req, reply) => {
+            const number = normalize(req.body.number);
+            if (!number) return reply.code(400).send({ error: 'Invalid phone number' });
+            let row = stmts.getNumber.get(number);
+            if (!row) {
+                stmts.insertOrIgnore.run(number, req.apiKey.branch);
+                row = stmts.getNumber.get(number);
+            }
+            return rowToResponse(row, number);
+        },
+    });
+
+    app.post('/api/batch', {
+        preHandler: [authenticate, rateLimit],
+        config: {
+            rateCost: (req) =>
+                Math.max(1, Math.ceil((req.body && Array.isArray(req.body.numbers) ? req.body.numbers.length : 1) / 10)),
+        },
+        schema: {
+            body: {
+                type: 'object',
+                required: ['numbers'],
+                properties: {
+                    numbers: {
+                        type: 'array',
+                        minItems: 1,
+                        maxItems: config.batchMaxSize,
+                        items: { type: 'string', minLength: 8, maxLength: 20 },
+                    },
+                },
+            },
+        },
+        handler: async (req, reply) => {
+            const numbers = normalizeMany(req.body.numbers);
+            if (numbers.length === 0) return reply.code(400).send({ error: 'No valid numbers' });
+
+            const rows = stmts.getNumbers.all(JSON.stringify(numbers));
+            const byNumber = new Map(rows.map((r) => [r.number, r]));
+
+            const missing = numbers.filter((n) => !byNumber.has(n));
+            if (missing.length > 0) {
+                insertOrIgnoreMany(missing, req.apiKey.branch);
+            }
+
+            return {
+                results: numbers.map((n) => rowToResponse(byNumber.get(n) || null, n)),
+                queued: missing.length,
+            };
+        },
+    });
+
+    app.post('/api/queue', {
+        preHandler: [authenticate, rateLimit],
+        schema: {
+            body: {
+                type: 'object',
+                required: ['numbers'],
+                properties: {
+                    numbers: {
+                        type: 'array',
+                        minItems: 1,
+                        maxItems: 1000,
+                        items: { type: 'string' },
+                    },
+                    priority: { type: 'string', enum: ['normal', 'high'] },
+                },
+            },
+        },
+        handler: async (req, reply) => {
+            const numbers = normalizeMany(req.body.numbers);
+            if (numbers.length === 0) return reply.code(400).send({ error: 'No valid numbers' });
+            const queued = insertOrIgnoreMany(numbers, req.apiKey.branch);
+            return { received: numbers.length, queued, alreadyKnown: numbers.length - queued };
+        },
+    });
+
+    // DEMO endpoint — randomly assigns flags for demo/testing.
+    // NOT a real detection. Useful when WhatsApp/Telegram pool sessions
+    // are not yet logged in but a visual demo is needed.
+    app.post('/api/demo-simulate', {
+        preHandler: [authenticate, rateLimit],
+        schema: {
+            body: {
+                type: 'object',
+                required: ['numbers'],
+                properties: {
+                    numbers: {
+                        type: 'array',
+                        minItems: 1,
+                        maxItems: 1000,
+                        items: { type: 'string' },
+                    },
+                    platform: { type: 'string', enum: ['whatsapp', 'telegram', 'both'] },
+                    waProbability: { type: 'number', minimum: 0, maximum: 1 },
+                    tgProbability: { type: 'number', minimum: 0, maximum: 1 },
+                },
+            },
+        },
+        handler: async (req, reply) => {
+            const numbers = normalizeMany(req.body.numbers);
+            if (numbers.length === 0) return reply.code(400).send({ error: 'No valid numbers' });
+
+            const platform = req.body.platform || 'both';
+            const waProb = typeof req.body.waProbability === 'number' ? req.body.waProbability : 0.7;
+            const tgProb = typeof req.body.tgProbability === 'number' ? req.body.tgProbability : 0.25;
+
+            insertOrIgnoreMany(numbers, req.apiKey.branch);
+
+            const ts = Math.floor(Date.now() / 1000);
+            const tx = db.transaction(() => {
+                for (const n of numbers) {
+                    if (platform === 'whatsapp' || platform === 'both') {
+                        const has = Math.random() < waProb ? 1 : 0;
+                        stmts.updateWhatsApp.run(has, ts, n);
+                    }
+                    if (platform === 'telegram' || platform === 'both') {
+                        const has = Math.random() < tgProb ? 1 : 0;
+                        stmts.updateTelegram.run(has, ts, n);
+                    }
+                }
+            });
+            tx();
+
+            const rows = stmts.getNumbers.all(JSON.stringify(numbers));
+            const byNumber = new Map(rows.map((r) => [r.number, r]));
+            return {
+                simulated: true,
+                platform,
+                count: numbers.length,
+                results: numbers.map((n) => rowToResponse(byNumber.get(n) || null, n)),
+            };
+        },
+    });
+}
+
+module.exports = { registerCheckRoutes };
