@@ -8,6 +8,7 @@ public class AccountSummary
     [JsonPropertyName("type")] public string Type { get; set; } = "";          // "whatsapp" | "telegram"
     [JsonPropertyName("state")] public string State { get; set; } = "";        // disconnected | connecting | awaiting_qr | awaiting_otp | awaiting_2fa | ready | error
     [JsonPropertyName("qr")] public string? Qr { get; set; }
+    [JsonPropertyName("qrPng")] public string? QrPng { get; set; }
     [JsonPropertyName("error")] public string? Error { get; set; }
     [JsonPropertyName("todayCount")] public int TodayCount { get; set; }
     [JsonPropertyName("pendingPhone")] public string? PendingPhone { get; set; }

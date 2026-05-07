@@ -3,7 +3,6 @@ using CrmDemo.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddAntiforgery();
 
 builder.Services.AddSingleton<ContactRepository>();
 builder.Services.AddHttpClient<DetectionClient>();
@@ -17,7 +16,6 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
-app.UseAntiforgery();
 
 app.MapControllerRoute(
     name: "default",

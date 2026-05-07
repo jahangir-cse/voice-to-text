@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const bigInt = require('big-integer');
-const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { TelegramClient, Api } = require('telegram');
 const { StringSession } = require('telegram/sessions');
@@ -28,6 +28,7 @@ class WhatsAppAccountState {
         this.client = null;
         this.state = STATES.DISCONNECTED;
         this.qr = null;
+        this.qrPng = null;
         this.error = null;
         this.todayCount = 0;
         this.todayDate = todayUtc();
@@ -62,8 +63,14 @@ class WhatsAppAccountState {
             },
         });
 
-        this.client.on('qr', (qr) => {
+        this.client.on('qr', async (qr) => {
             this.qr = qr;
+            try {
+                this.qrPng = await QRCode.toDataURL(qr, { width: 320, margin: 2 });
+            } catch (err) {
+                logger.warn({ id: this.id, err: err.message }, 'QR PNG generation failed');
+                this.qrPng = null;
+            }
             this.state = STATES.AWAITING_QR;
             logger.info({ id: this.id }, 'WhatsApp QR ready, awaiting scan');
         });
@@ -73,6 +80,7 @@ class WhatsAppAccountState {
         this.client.on('ready', () => {
             this.state = STATES.READY;
             this.qr = null;
+            this.qrPng = null;
             stmts.upsertAccount.run(this.id, 'whatsapp', this.todayDate);
             logger.info({ id: this.id }, 'WhatsApp account ready');
         });
@@ -111,6 +119,7 @@ class WhatsAppAccountState {
         this.client = null;
         this.state = STATES.DISCONNECTED;
         this.qr = null;
+        this.qrPng = null;
         this.error = null;
         stmts.setAccountStatus.run('disconnected', null, this.id);
     }
@@ -118,7 +127,7 @@ class WhatsAppAccountState {
     summary() {
         return {
             id: this.id, type: this.type, state: this.state,
-            qr: this.qr, error: this.error,
+            qr: this.qr, qrPng: this.qrPng, error: this.error,
             todayCount: this.todayCount,
         };
     }
